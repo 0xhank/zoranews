@@ -1,3 +1,4 @@
+import type { NewsArticle } from "@zora-news/shared";
 import React, { useState } from "react";
 import { useNewsScraper } from "../../hooks/useNewsScraper";
 
@@ -28,7 +29,7 @@ const ScraperTest: React.FC = () => {
 
   // Get selected article details
   const selectedArticle = articles.find(
-    (article) => article.id === selectedArticleId
+    (article: NewsArticle) => article.id === selectedArticleId
   );
 
   return (
@@ -79,7 +80,7 @@ const ScraperTest: React.FC = () => {
           {isSearching && (
             <button
               onClick={clearSearch}
-              className="bg-gray-200 px-4 py-2 rounded-r-md hover:bg-gray-300"
+              className="bg-gray-200 text-gray-800 px-4 py-2 rounded-r-md hover:bg-gray-300"
             >
               Clear
             </button>
@@ -109,7 +110,7 @@ const ScraperTest: React.FC = () => {
             </div>
           ) : (
             <div className="overflow-y-auto max-h-[60vh]">
-              {articles.map((article) => (
+              {articles.map((article: NewsArticle) => (
                 <div
                   key={article.id}
                   className={`p-4 mb-2 border rounded-md cursor-pointer transition-colors ${

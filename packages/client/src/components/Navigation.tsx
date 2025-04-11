@@ -15,11 +15,11 @@ const Navigation: React.FC<NavigationProps> = ({
   ];
 
   return (
-    <nav className="bg-gray-800 text-white">
+    <nav className="bg-gray-800">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <div className="font-bold text-xl">Zora News</div>
+            <div className="font-bold text-xl text-white">Zora News</div>
           </div>
 
           <div className="hidden md:block">
