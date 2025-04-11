@@ -1,11 +1,11 @@
 import { router } from "../trpc";
-import { memecoinRouter } from "./memecoin";
+import { coinRouter } from "./coin";
 import { newsRouter } from "./news";
 
 // Main app router combines all subrouters
 export const appRouter = router({
   newsRouter: newsRouter,
-  memecoin: memecoinRouter,
+  coin: coinRouter,
 });
 
 // Export type definition of the API

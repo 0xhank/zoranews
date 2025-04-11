@@ -1,0 +1,36 @@
+---
+description: Zora Coins integration guidelines and implementation details
+globs: packages/server/src/routers/coin.ts, packages/client/src/hooks/useZoraCoins.ts, packages/shared/src/**/*.ts
+---
+
+# Zora Coins Integration
+
+## Server Routes
+- Use the coin router for all Zora coin related functionality
+- Each endpoint validates inputs using Zod schemas
+- Routes include: createCoin, getCoinDetails, getAccountCoins, searchCoins, getTopCoins, getRecentCoins
+- The Base chain is used for all Zora coin operations with configurable RPC URL
+
+## Client Hooks
+- Use the useZoraCoins hook to interact with the Zora API
+- Hook provides mutation for creating coins and queries for fetching coin data
+- Manages loading states and error handling for all operations
+- Automatically handles stale data with appropriate cache times
+
+## Metadata Standards
+- All coins follow the EIP-7572 metadata standard
+- Metadata includes: name, description, image and optional content properties
+- Store metadata on IPFS for decentralized persistence
+- Validate metadata format before creating coins
+
+## Type Definitions
+- The ZoraCoin interface is defined in the shared package
+- Types are automatically inferred from the server's router
+- Use the shared types to ensure consistency between client and server
+- Appropriate validation is applied to all inputs
+
+## Production Usage
+- An API key should be set for production environments
+- Set API key using setApiKey from the Zora SDK
+- Contact Zora support to obtain an API key
+- Monitor API usage for high-traffic applications 

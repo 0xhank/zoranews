@@ -1,6 +1,7 @@
 import type { NewsArticle } from "@zora-news/shared";
 import React, { useState } from "react";
 import { useNewsScraper } from "../../hooks/useNewsScraper";
+import { useZoraCoins } from "../../hooks/useZoraCoins";
 
 const ScraperTest: React.FC = () => {
   const {
@@ -16,9 +17,22 @@ const ScraperTest: React.FC = () => {
     isSearching,
   } = useNewsScraper();
 
+  const { createCoin, isCreating } = useZoraCoins();
+
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(
     null
   );
+
+  const [coinName, setCoinName] = useState("");
+  const [coinSymbol, setCoinSymbol] = useState("");
+  const [payoutAddress, setPayoutAddress] = useState("");
+  const [creationStatus, setCreationStatus] = useState<{
+    status: "idle" | "success" | "error";
+    message: string;
+  }>({
+    status: "idle",
+    message: "",
+  });
 
   // Format date for display
   const formatDate = (dateString?: string | null) => {
@@ -31,6 +45,75 @@ const ScraperTest: React.FC = () => {
   const selectedArticle = articles.find(
     (article: NewsArticle) => article.id === selectedArticleId
   );
+
+  // Generate coin name and symbol from article
+  const generateCoinNameSymbol = () => {
+    if (!selectedArticle) return;
+
+    // Extract keywords from the headline for the name
+    const headline = selectedArticle.headline;
+    const words = headline.split(" ");
+
+    // Create a name from the first 3-4 significant words
+    const significantWords = words
+      .filter((word) => word.length > 3)
+      .slice(0, 3)
+      .map(
+        (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      );
+
+    const name = significantWords.join(" ") + " Coin";
+
+    // Create a symbol from the first letters of significant words
+    const symbol = significantWords
+      .map((word) => word.charAt(0).toUpperCase())
+      .join("");
+
+    setCoinName(name);
+    setCoinSymbol(symbol);
+  };
+
+  // Handle coin creation
+  const handleCreateCoin = async () => {
+    if (!selectedArticle || !coinName || !coinSymbol || !payoutAddress) {
+      setCreationStatus({
+        status: "error",
+        message: "Please fill all required fields",
+      });
+      return;
+    }
+
+    try {
+      // For demo purposes, we'll use a mock metadata URI
+      // In a real app, you'd create proper metadata and upload to IPFS
+      const mockMetadataUri = `https://example.com/metadata/${selectedArticleId}.json`;
+
+      await createCoin({
+        name: coinName,
+        symbol: coinSymbol,
+        uri: mockMetadataUri,
+        payoutRecipient: payoutAddress,
+      });
+
+      setCreationStatus({
+        status: "success",
+        message:
+          "Coin creation parameters generated successfully! Use these parameters to complete the transaction on the client side.",
+      });
+
+      // Reset form
+      setCoinName("");
+      setCoinSymbol("");
+      setPayoutAddress("");
+    } catch (error) {
+      console.error("Error creating coin:", error);
+      setCreationStatus({
+        status: "error",
+        message:
+          error instanceof Error ? error.message : "Failed to create coin",
+      });
+    }
+  };
 
   return (
     <div className="p-8 font-sans bg-gray-100 min-h-screen">
@@ -132,7 +215,7 @@ const ScraperTest: React.FC = () => {
           )}
         </div>
 
-        {/* Article Details */}
+        {/* Article Details and Coin Creation */}
         <div className="bg-white rounded-lg p-6 shadow-md">
           <h2 className="text-xl font-semibold mb-4">Article Details</h2>
 
@@ -162,18 +245,81 @@ const ScraperTest: React.FC = () => {
               </div>
 
               <div className="mt-6 p-4 bg-gray-50 rounded-md">
-                <h4 className="font-medium mb-2">Generate Memecoin</h4>
-                <button
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                  onClick={() => {
-                    // This will be implemented in a future step
-                    alert(
-                      `Will generate memecoin based on: ${selectedArticle.headline}`
-                    );
-                  }}
-                >
-                  Create Memecoin
-                </button>
+                <h4 className="font-medium mb-4">Create Zora Coin</h4>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Coin Name
+                    </label>
+                    <input
+                      type="text"
+                      value={coinName}
+                      onChange={(e) => setCoinName(e.target.value)}
+                      placeholder="Enter coin name"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Symbol
+                    </label>
+                    <input
+                      type="text"
+                      value={coinSymbol}
+                      onChange={(e) => setCoinSymbol(e.target.value)}
+                      placeholder="Enter coin symbol (3-4 chars)"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Payout Address (ETH)
+                    </label>
+                    <input
+                      type="text"
+                      value={payoutAddress}
+                      onChange={(e) => setPayoutAddress(e.target.value)}
+                      placeholder="0x..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
+
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={generateCoinNameSymbol}
+                      className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                    >
+                      Auto-Generate
+                    </button>
+
+                    <button
+                      onClick={handleCreateCoin}
+                      disabled={isCreating}
+                      className={`px-4 py-2 rounded-md text-white font-medium ${
+                        isCreating
+                          ? "bg-green-300 cursor-not-allowed"
+                          : "bg-green-600 hover:bg-green-700"
+                      }`}
+                    >
+                      {isCreating ? "Creating..." : "Create Coin"}
+                    </button>
+                  </div>
+
+                  {creationStatus.status !== "idle" && (
+                    <div
+                      className={`mt-3 p-3 rounded-md ${
+                        creationStatus.status === "success"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {creationStatus.message}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ) : (
