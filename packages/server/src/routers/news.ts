@@ -1,35 +1,6 @@
-import type { NewsArticle } from "@zora-news/shared";
 import { z } from "zod";
-import { newsScraper } from "../services/newsScraper";
 import { publicProcedure, router } from "../trpc";
-
-// Mock news data for demonstration
-const mockNews: NewsArticle[] = [
-  {
-    id: "1",
-    headline: "Bitcoin Surges to New All-Time High",
-    summary:
-      "Bitcoin has reached a new all-time high as institutional adoption increases.",
-    url: "https://example.com/bitcoin-ath",
-    timestamp: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    headline: "New AI Model Revolutionizes Natural Language Processing",
-    summary:
-      "A breakthrough in AI technology promises to transform how computers understand human language.",
-    url: "https://example.com/ai-breakthrough",
-    timestamp: new Date().toISOString(),
-  },
-  {
-    id: "3",
-    headline: "Tech Startup Raises $100M in Series B Funding",
-    summary:
-      "A promising tech startup has secured significant funding to scale its operations globally.",
-    url: "https://example.com/startup-funding",
-    timestamp: new Date().toISOString(),
-  },
-];
+import { newsScraper } from "../services/newsScraper";
 
 export const newsRouter = router({
   getAll: publicProcedure.query(async () => {

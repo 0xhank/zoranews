@@ -4,7 +4,7 @@ import { newsRouter } from "./news";
 
 // Main app router combines all subrouters
 export const appRouter = router({
-  news: newsRouter,
+  newsRouter: newsRouter,
   memecoin: memecoinRouter,
 });
 

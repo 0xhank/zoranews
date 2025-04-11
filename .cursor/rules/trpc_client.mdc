@@ -1,6 +1,7 @@
 ---
 description: tRPC client integration guidelines
 globs: packages/client/src/**/*.ts, packages/client/src/**/*.tsx
+alwaysApply: false
 ---
 
 # tRPC Client Integration
@@ -9,7 +10,7 @@ globs: packages/client/src/**/*.ts, packages/client/src/**/*.tsx
 - tRPC client is configured in `src/utils/trpc.ts`
 - Client uses React Query for data fetching and caching
 - Main provider is set up in the app's entry point
-- Connects to the tRPC server at http://localhost:3001/trpc
+- Connects to the tRPC server at http://localhost:3069/trpc
 
 ## Custom Hooks
 - Each domain has its own custom hook (`useNews.ts`, `useMemecoin.ts`, etc.)

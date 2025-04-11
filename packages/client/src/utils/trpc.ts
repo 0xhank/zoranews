@@ -3,7 +3,7 @@ import { createTRPCReact } from "@trpc/react-query";
 import { type AppRouter } from "@zora-news/server/src/routers/_app";
 
 // API url for the tRPC server
-const apiUrl = "http://localhost:3001/trpc";
+const apiUrl = "http://localhost:3069/trpc";
 
 // Create tRPC client
 export const trpc = createTRPCReact<AppRouter>();

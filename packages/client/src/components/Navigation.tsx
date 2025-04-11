@@ -51,7 +51,7 @@ const Navigation: React.FC<NavigationProps> = ({
               onClick={() => onChangePage(page.id)}
               className={`block px-3 py-2 rounded-md text-base font-medium w-full text-left ${
                 currentPage === page.id
-                  ? "bg-gray-900 text-white"
+                  ? "bg-black text-white"
                   : "text-gray-300 hover:bg-gray-700 hover:text-white"
               }`}
             >

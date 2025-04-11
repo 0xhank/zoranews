@@ -6,25 +6,29 @@ export const useNewsScraper = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Get all news articles
-  const allNewsQuery = trpc.news.getAll.useQuery();
+  const allNewsQuery = trpc.newsRouter.getAll.useQuery();
 
   // Get scraping status
-  const scrapingStatusQuery = trpc.news.getScrapingStatus.useQuery(undefined, {
-    // Refresh every 30 seconds
-    refetchInterval: 30000,
-  });
+  const scrapingStatusQuery = trpc.newsRouter.getScrapingStatus.useQuery(
+    undefined,
+    {
+      // Refresh every 30 seconds
+      refetchInterval: 30000,
+    }
+  );
 
   // Trigger manual scraping
-  const scrapeNowMutation = trpc.news.scrapeNow.useMutation({
-    onSuccess: () => {
+  const scrapeNowMutation = trpc.newsRouter.scrapeNow.useMutation({
+    onSuccess: (result) => {
       // Refresh the news and status after scraping
       allNewsQuery.refetch();
       scrapingStatusQuery.refetch();
+      console.log("Scrape result", result);
     },
   });
 
   // Search articles
-  const searchQuery = trpc.news.search.useQuery(
+  const searchQuery = trpc.newsRouter.search.useQuery(
     { query: searchTerm },
     {
       enabled: isSearching && searchTerm.length > 0,

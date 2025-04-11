@@ -112,7 +112,7 @@ const ScraperTest: React.FC = () => {
             <div className="overflow-y-auto max-h-[60vh]">
               {articles.map((article: NewsArticle) => (
                 <div
-                  key={article.id}
+                  key={`article-${article.id}-${article.timestamp}`}
                   className={`p-4 mb-2 border rounded-md cursor-pointer transition-colors ${
                     selectedArticleId === article.id
                       ? "bg-blue-50 border-blue-300"

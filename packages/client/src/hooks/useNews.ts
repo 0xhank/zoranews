@@ -1,14 +1,14 @@
 import { trpc } from "../utils/trpc";
 
 export const useNews = () => {
-  const allNewsQuery = trpc.news.getAll.useQuery();
+  const allNewsQuery = trpc.newsRouter.getAll.useQuery();
 
   const getNewsById = (id: string) => {
-    return trpc.news.getById.useQuery({ id });
+    return trpc.newsRouter.getById.useQuery({ id });
   };
 
   const searchNews = (query: string) => {
-    return trpc.news.search.useQuery({ query });
+    return trpc.newsRouter.search.useQuery({ query });
   };
 
   return {
