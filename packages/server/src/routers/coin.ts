@@ -18,13 +18,16 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import { base } from "viem/chains";
 import { z } from "zod";
+import { uploadMetadataToIpfs } from "../lib/ipfsUploader";
 import { publicProcedure, router } from "../trpc";
 
 // Define validation schemas
 const createCoinSchema = z.object({
   name: z.string().min(1, "Name is required"),
   symbol: z.string().min(1, "Symbol is required"),
-  uri: z.string().url("URI must be a valid URL"),
+  description: z.string().min(1, "Description is required"),
+  image: z.string().url("Image must be a valid URL"),
+  properties: z.record(z.unknown()).optional(),
   payoutRecipient: z.string().refine((val) => /^0x[a-fA-F0-9]{40}$/.test(val), {
     message: "Invalid Ethereum address format",
   }),
@@ -57,24 +60,25 @@ export const coinRouter = router({
     .input(createCoinSchema)
     .mutation(async ({ input }) => {
       try {
-        // Validate metadata
-        try {
-          // This would require fetching the URI content and validating
-          // For simplicity, we'll assume it's valid
-          // In production, use validateMetadataURIContent
-        } catch (error) {
-          console.error(error);
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Invalid metadata URI",
-          });
-        }
+        // Construct metadata object from input
+        const metadataToUpload = {
+          name: input.name,
+          description: input.description,
+          image: input.image,
+          properties: input.properties || {},
+        };
 
-        // Create coin call params (this just returns the params - does not execute the transaction)
+        // Upload metadata to IPFS using the library function
+        const metadataUri = await uploadMetadataToIpfs(
+          metadataToUpload,
+          `CoinMetadata - ${input.symbol}`
+        );
+
+        // Create coin call params using the generated URI
         const coinParams = {
           name: input.name,
           symbol: input.symbol,
-          uri: input.uri,
+          uri: metadataUri,
           payoutRecipient: input.payoutRecipient as Address,
           platformReferrer: input.platformReferrer as Address | undefined,
           initialPurchaseWei: input.initialPurchaseWei

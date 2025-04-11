@@ -1,8 +1,8 @@
-import pinataSDK from "@pinata/sdk";
 import dotenv from "dotenv";
 import { Hex } from "viem";
 import { privateKeyToAddress } from "viem/accounts";
 import { describe, expect, it } from "vitest";
+import { uploadMetadataToIpfs } from "../lib/ipfsUploader";
 import { appRouter } from "../routers/_app";
 
 // Load environment variables
@@ -15,18 +15,7 @@ if (!process.env.PRIVATE_KEY) {
   );
 }
 
-// Check for Pinata keys
-if (!process.env.PINATA_API_KEY || !process.env.PINATA_SECRET_API_KEY) {
-  throw new Error(
-    "PINATA_API_KEY or PINATA_SECRET_API_KEY environment variables are not set. Get them from pinata.cloud."
-  );
-}
-
 const address = privateKeyToAddress(process.env.PRIVATE_KEY as Hex);
-const pinata = new pinataSDK(
-  process.env.PINATA_API_KEY,
-  process.env.PINATA_SECRET_API_KEY
-);
 
 describe("Coin Router", () => {
   it("should generate parameters for creating a coin after uploading metadata", async () => {
@@ -34,28 +23,33 @@ describe("Coin Router", () => {
 
     // Define metadata
     const metadata = {
-      name: "THE REAL HARRY KINGDON",
-      description: "A truly regal coin",
+      name: "THE REAL HARRY KINGDON TEST",
+      description: "A truly regal test coin",
       image:
         "https://imgs.search.brave.com/R94AIHyXwBBi7djlHzirA1wHHTVsJ2zg45AvEiuIBPk/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly91cGxv/YWQud2lraW1lZGlh/Lm9yZy93aWtpcGVk/aWEvY29tbW9ucy81/LzU2L1ByaW5jZV9I/YXJyeV90YWxrc190/b19hbl9pbmp1cmVk/X3NvbGRpZXIuanBn",
-      properties: { category: "test" },
+      properties: { category: "test", testId: `test-${Date.now()}` },
     };
 
     let metadataUri = "";
     try {
-      // Upload metadata to IPFS
-      const pinataResponse = await pinata.pinJSONToIPFS(metadata);
-      metadataUri = `ipfs://${pinataResponse.IpfsHash}`;
-      console.log("Metadata uploaded to IPFS:", metadataUri);
-    } catch (pinataError) {
-      console.error("Error uploading metadata to Pinata:", pinataError);
-      throw new Error("Failed to upload metadata to IPFS");
+      // Use the library function to upload metadata
+      metadataUri = await uploadMetadataToIpfs(
+        metadata,
+        `Test Coin - ${metadata.name}`
+      );
+      console.log("Metadata uploaded via lib function:", metadataUri);
+    } catch (uploadError) {
+      console.error("Error uploading metadata via lib:", uploadError);
+      // Rethrow or handle as needed for the test
+      throw new Error("Failed to upload metadata using library function");
     }
 
     const input = {
       name: metadata.name,
       symbol: "HARRY",
-      uri: metadataUri,
+      description: metadata.description,
+      image: metadata.image,
+      properties: metadata.properties,
       payoutRecipient: address,
       initialPurchaseWei: "0",
     };
@@ -77,5 +71,5 @@ describe("Coin Router", () => {
       console.error("Error creating coin:", error);
       throw error;
     }
-  }, 30000); // Increase timeout for IPFS upload
+  }, 60000); // Increase timeout for double IPFS upload + SDK call
 });
