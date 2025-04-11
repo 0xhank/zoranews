@@ -1,4 +1,5 @@
-import { createTRPCReact, httpBatchLink } from "@trpc/react-query";
+import { httpBatchLink } from "@trpc/client";
+import { createTRPCReact } from "@trpc/react-query";
 import { type AppRouter } from "@zora-news/server/src/routers/_app";
 
 // API url for the tRPC server
