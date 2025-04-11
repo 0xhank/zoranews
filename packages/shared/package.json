@@ -1,0 +1,16 @@
+{
+  "name": "@zora-news/shared",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "typescript": "~5.7.2",
+    "eslint": "^9.21.0"
+  }
+}

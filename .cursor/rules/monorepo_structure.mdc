@@ -1,0 +1,30 @@
+---
+description: Monorepo structure and architecture guidelines
+globs: packages/**/*
+---
+
+# Monorepo Structure and Architecture
+
+## Package Organization
+- Root workspace manages all packages via pnpm workspaces
+- Client package (`packages/client`) contains the React frontend
+- Server package (`packages/server`) contains the tRPC server
+- Shared package (`packages/shared`) contains shared types and utilities
+
+## Dependency Management
+- Use workspace references (`workspace:*`) for internal dependencies
+- Keep package versions consistent across all packages
+- Use `pnpm` for package management and workspace commands
+- Root package.json contains scripts for running all packages
+
+## Naming Conventions
+- Package names use the format `@zora-news/[package-name]`
+- Use consistent naming across the codebase
+- Folders should be kebab-case, files should be camelCase
+- React components should be PascalCase
+
+## Type Sharing
+- Define shared types in the `shared` package
+- Export all types through the package entry point
+- Import shared types in both client and server packages
+- Ensure type consistency between client and server 

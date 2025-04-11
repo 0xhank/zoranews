@@ -1,0 +1,174 @@
+---
+description: High-level overview of the News-Driven Memecoin Generator project.
+globs: ["**/*"] # Apply this rule broadly to the project
+---
+
+# News-Driven Memecoin Generator
+
+## Project Overview
+An automated system that scrapes recent news articles, analyzes trending topics, and generates custom memecoins with AI-generated logos and descriptions.
+
+## Features
+- **News Scraping**: Automatically extract trending articles from news platforms
+- **Topic Analysis**: Process news content to identify memeable topics
+- **Memecoin Generation**: Create coin names and descriptions based on current events
+- **Image Creation**: Generate custom token logos using DALL-E
+- **Smart Contract Creation**: Automate the deployment of token contracts
+
+## Technical Architecture
+
+### 1. News Scraping Module
+- Uses Axios and Cheerio to extract content from news sources
+- Targets headlines, summaries, and trending topics
+- Filters for high-engagement or viral news content
+
+### 2. Topic Analysis Module
+- Employs NLP libraries like Natural or compromise.js to extract key entities and themes
+- Identifies potentially viral or "memeable" content
+- Ranks topics by relevance and meme potential
+
+### 3. Memecoin Generation Module
+- Creates token names by combining trending topics with crypto terminology
+- Uses OpenAI's API to craft compelling coin descriptions
+- Generates token economics based on news sentiment
+
+### 4. Image Creation Module
+- Leverages DALL-E to create unique logos based on news themes
+- Incorporates crypto-specific design elements
+- Ensures images are distinctive and memorable
+
+### 5. Smart Contract Module
+- Utilizes Web3.js or Ethers.js for interacting with Ethereum/BSC
+- Implements ERC-20/BEP-20 token templates
+- Automates parameter configuration and deployment
+
+## Implementation Details
+
+```javascript
+// Core project structure
+
+// 1. News Scraping
+async function scrapeLatestNews(url) {
+  const axios = require('axios');
+  const cheerio = require('cheerio');
+  
+  // Fetch HTML content
+  const response = await axios.get(url);
+  const $ = cheerio.load(response.data);
+  
+  // Extract articles
+  const articles = [];
+  $('article').each((i, el) => {
+    // Extract headline, summary, etc.
+    articles.push({
+      headline: $(el).find('h2').text(),
+      summary: $(el).find('.summary').text(),
+      // Add other relevant fields
+    });
+  });
+  
+  return articles;
+}
+
+// 2. Generate Memecoin Concept
+async function generateCoinConcept(article) {
+  const { Configuration, OpenAIApi } = require('openai');
+  
+  const configuration = new Configuration({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+  const openai = new OpenAIApi(configuration);
+  
+  const response = await openai.createChatCompletion({
+    model: "gpt-4",
+    messages: [
+      { role: "system", content: "Create a memecoin concept based on this news article." },
+      { role: "user", content: JSON.stringify(article) }
+    ]
+  });
+  
+  return response.data.choices[0].message.content;
+}
+
+// 3. Generate Logo with DALL-E
+async function generateLogo(concept) {
+  const { Configuration, OpenAIApi } = require('openai');
+  
+  const configuration = new Configuration({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+  const openai = new OpenAIApi(configuration);
+  
+  const response = await openai.createImage({
+    prompt: `Create a crypto coin logo based on: ${concept}`,
+    n: 1,
+    size: "512x512"
+  });
+  
+  return response.data.data[0].url;
+}
+
+// 4. Deploy Token
+async function deployToken(name, symbol, description, supply) {
+  const Web3 = require('web3');
+  const web3 = new Web3(process.env.WEB3_PROVIDER_URL);
+  
+  // Load wallet from private key
+  const account = web3.eth.accounts.privateKeyToAccount(process.env.PRIVATE_KEY);
+  web3.eth.accounts.wallet.add(account);
+  
+  // Load contract ABI and bytecode
+  const contractABI = require('./contracts/ERC20Token.json').abi;
+  const contractBytecode = require('./contracts/ERC20Token.json').bytecode;
+  
+  // Deploy contract
+  const contract = new web3.eth.Contract(contractABI);
+  const deployTx = contract.deploy({
+    data: contractBytecode,
+    arguments: [name, symbol, web3.utils.toWei(supply.toString(), 'ether')]
+  });
+  
+  const deployedContract = await deployTx.send({
+    from: account.address,
+    gas: 4000000
+  });
+  
+  return {
+    address: deployedContract.options.address,
+    transaction: deployedContract.transactionHash
+  };
+}
+```
+
+## Technical Requirements
+- Node.js 16+
+- OpenAI API key (for GPT and DALL-E)
+- Web3 provider (Infura/Alchemy)
+- Crypto wallet with testnet/mainnet funds
+- News API access or target news sites
+
+## Setup Instructions
+1. Clone this repository
+2. Install dependencies: `npm install`
+3. Create `.env` file with your API keys and configuration
+4. Run the main script: `node memecoin_generator.js`
+
+## Potential Extensions
+- Web dashboard using Express.js and React for displaying generated memecoins
+- Social media auto-posting for new coins using Twitter/Discord APIs
+- Sentiment analysis for coin theming (bullish/bearish) using NLP libraries
+- Community voting system for selecting which coins to deploy
+- Historical performance tracking of news-based memecoins
+
+## Hackathon Demo Flow
+1. Select a recent trending news article
+2. Run the pipeline to generate a memecoin concept
+3. Display the AI-generated name, description, and logo
+4. Show the smart contract parameters and deployment process
+5. Present the final memecoin with blockchain verification
+
+## License
+MIT
+
+## Team
+[Your Hackathon Team Name and Members] 
