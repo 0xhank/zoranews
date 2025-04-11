@@ -1,5 +1,6 @@
 import type { NewsArticle } from "@zora-news/shared";
 import { z } from "zod";
+import { newsScraper } from "../services/newsScraper";
 import { publicProcedure, router } from "../trpc";
 
 // Mock news data for demonstration
@@ -32,14 +33,19 @@ const mockNews: NewsArticle[] = [
 
 export const newsRouter = router({
   getAll: publicProcedure.query(async () => {
-    // In a real app, this would fetch from a database or external API
-    return mockNews;
+    // Return cached articles if available, otherwise scrape new ones
+    const articles = newsScraper.getArticles();
+    if (articles.length === 0) {
+      // Initial scrape if no articles are available
+      return await newsScraper.scrapeAll();
+    }
+    return articles;
   }),
 
   getById: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
-      const article = mockNews.find((news) => news.id === input.id);
+      const article = newsScraper.getArticleById(input.id);
       if (!article) {
         throw new Error("Article not found");
       }
@@ -49,11 +55,22 @@ export const newsRouter = router({
   search: publicProcedure
     .input(z.object({ query: z.string() }))
     .query(async ({ input }) => {
-      const query = input.query.toLowerCase();
-      return mockNews.filter(
-        (article) =>
-          article.headline.toLowerCase().includes(query) ||
-          article.summary.toLowerCase().includes(query)
-      );
+      return newsScraper.searchArticles(input.query);
     }),
+
+  scrapeNow: publicProcedure.mutation(async () => {
+    const articles = await newsScraper.scrapeAll();
+    return {
+      count: articles.length,
+      timestamp: new Date().toISOString(),
+    };
+  }),
+
+  getScrapingStatus: publicProcedure.query(() => {
+    const lastScraped = newsScraper.getLastScraped();
+    return {
+      lastScraped: lastScraped ? lastScraped.toISOString() : null,
+      articleCount: newsScraper.getArticles().length,
+    };
+  }),
 });

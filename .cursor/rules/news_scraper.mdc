@@ -1,0 +1,34 @@
+---
+description: News scraping module architecture and implementation rules
+globs: packages/server/src/services/newsScraper.ts, packages/server/src/routers/news.ts
+---
+
+# News Scraping Module
+
+## Architecture
+- Uses Axios for fetching HTML content from news sources
+- Uses Cheerio for parsing HTML and extracting data
+- Implements a singleton pattern for global access
+- Integrates with the tRPC router for exposing endpoints
+
+## News Sources
+- Configuration is done through the NewsSource interface
+- Each source defines its own CSS selectors for content extraction
+- Source configurations can be extended by adding to the NEWS_SOURCES array
+- Viral indicators help filter for high-engagement content
+
+## Deduplication
+- Similar news articles are deduplicated using Jaccard similarity
+- Headline similarity calculation prevents duplicate content
+- Articles are sorted by timestamp (most recent first)
+- Unique IDs are generated based on source name and URL
+
+## Caching
+- Articles are cached in memory for performance
+- Cache is refreshed on scheduled intervals
+- Last scrape timestamp is tracked for status reporting
+
+## Integration
+- Scheduler runs the scraper on configurable intervals
+- tRPC router exposes methods for getting and searching articles
+- Manual scraping can be triggered through the API 
