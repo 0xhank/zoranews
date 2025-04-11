@@ -1,34 +1,56 @@
 ---
 description: News scraping module architecture and implementation rules
-globs: packages/server/src/services/newsScraper.ts, packages/server/src/routers/news.ts
+globs: packages/server/src/services/newsScraper.ts, packages/server/src/test-scraper.ts
 ---
 
-# News Scraping Module
+# News Scraper Module
 
-## Architecture
-- Uses Axios for fetching HTML content from news sources
-- Uses Cheerio for parsing HTML and extracting data
-- Implements a singleton pattern for global access
-- Integrates with the tRPC router for exposing endpoints
+## Overview
+- Primary module for collecting crypto news articles from various sources
+- Located in `packages/server/src/services/newsScraper.ts`
+- Returns normalized `NewsArticle` objects with consistent structure
+- Focuses exclusively on RSS feeds for reliable, structured data
 
-## News Sources
-- Configuration is done through the NewsSource interface
-- Each source defines its own CSS selectors for content extraction
-- Source configurations can be extended by adding to the NEWS_SOURCES array
-- Viral indicators help filter for high-engagement content
+## Data Sources
+- RSS feeds only: CoinDesk, Decrypt, BeInCrypto, The Block, Cointelegraph
+- Processes feeds with fast-xml-parser for XML parsing
+- No HTML scraping to avoid reliability issues and anti-scraping measures
 
-## Deduplication
-- Similar news articles are deduplicated using Jaccard similarity
-- Headline similarity calculation prevents duplicate content
-- Articles are sorted by timestamp (most recent first)
-- Unique IDs are generated based on source name and URL
+## Content Filtering
+- Time-based filtering: Only includes articles from the past 12 hours
+- Content-based filtering: Excludes sponsored/advertorial content
+- Keyword-based filtering: Rejects articles containing terms like "sponsored", "press release", etc.
+- Category-based filtering: Skips articles in promotional or sponsored categories
 
-## Caching
-- Articles are cached in memory for performance
-- Cache is refreshed on scheduled intervals
-- Last scrape timestamp is tracked for status reporting
+## RSS Configuration
+- Each RSS feed configured with XML path mappings
+- `itemPath`: Path to article items in the XML structure
+- `titlePath`: Path to headline content
+- `descriptionPath`: Path to article summary
+- `linkPath`: Path to article URL
+- `datePath`: Path to publication date
+- `categoryPath`: Optional path to article categories
 
-## Integration
-- Scheduler runs the scraper on configurable intervals
-- tRPC router exposes methods for getting and searching articles
-- Manual scraping can be triggered through the API 
+## Extraction Logic
+- Processes all RSS feeds with appropriate headers
+- Handles dates to filter for recency
+- Smart deduplication across multiple sources
+- Groups similar articles to prevent duplicates
+- Implements randomized request delays to avoid rate limiting
+
+## Anti-Bot Measures
+- Uses browser-like User-Agent headers to avoid being blocked
+- Sets appropriate Accept headers for XML content
+- Implements timeout handling for requests
+
+## Deduplication Strategy
+- Uses Jaccard similarity to identify related articles
+- Groups similar articles based on headline content
+- Selects best article from each group based on completeness
+- May include multiple sources for major stories
+- Tracks seen URLs to prevent duplicates during scraping session
+
+## Testing
+- Test script in `packages/server/src/test-scraper.ts`
+- Validates scraper functionality without full server startup
+- Logs sample articles for manual verification 
