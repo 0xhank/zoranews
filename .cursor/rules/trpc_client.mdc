@@ -1,0 +1,30 @@
+---
+description: tRPC client integration guidelines
+globs: packages/client/src/**/*.ts, packages/client/src/**/*.tsx
+---
+
+# tRPC Client Integration
+
+## Client Setup
+- tRPC client is configured in `src/utils/trpc.ts`
+- Client uses React Query for data fetching and caching
+- Main provider is set up in the app's entry point
+- Connects to the tRPC server at http://localhost:3001/trpc
+
+## Custom Hooks
+- Each domain has its own custom hook (`useNews.ts`, `useMemecoin.ts`, etc.)
+- Hooks encapsulate tRPC procedures and provide a clean interface
+- Components should use these hooks instead of direct tRPC calls
+- Hooks handle data fetching, caching, and error states
+
+## Usage in Components
+- Import the appropriate hook for the domain you're working with
+- Use destructuring to access the data and utility functions
+- Handle loading and error states appropriately
+- Pass the correct parameters to query and mutation functions
+
+## Type Safety
+- Types are automatically inferred from the server's router
+- The AppRouter type is imported from the server package
+- Client code has full type safety with server endpoints
+- No need for manual type definitions for API responses 

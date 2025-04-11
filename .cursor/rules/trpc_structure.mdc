@@ -1,0 +1,30 @@
+---
+description: tRPC server architecture and conventions
+globs: packages/server/src/**/*.ts
+---
+
+# tRPC Server Architecture
+
+## Server Structure
+- Server is built with Express.js and tRPC
+- Entry point is in `src/index.ts`
+- tRPC configuration is in `src/trpc.ts`
+- Routers are organized in `src/routers/` directory
+- Main router combines all subrouters in `src/routers/_app.ts`
+
+## Router Organization
+- Each domain has its own router file (`news.ts`, `memecoin.ts`, etc.)
+- Each router exports a tRPC router with related procedures
+- Procedures are grouped by functionality (queries and mutations)
+- Inputs are validated using Zod schemas
+
+## Type Safety
+- Types are shared between client and server via the shared package
+- The `AppRouter` type is exported for client usage
+- All procedure inputs and outputs should be properly typed
+- Use the shared types for consistent data structures
+
+## Authentication
+- Protected routes use the `protectedProcedure` middleware
+- Authentication is handled via JWT tokens
+- User context is available in all protected procedures 

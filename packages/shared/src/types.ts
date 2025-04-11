@@ -6,3 +6,14 @@ export interface NewsArticle {
   url: string;
   timestamp: string;
 }
+
+export interface MemeToken {
+  id: string;
+  name: string;
+  symbol: string;
+  description: string;
+  logoUrl: string;
+  basedOn: string;
+  timestamp: string;
+  contractAddress?: string;
+}
