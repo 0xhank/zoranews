@@ -3,7 +3,9 @@ import { trpc } from "../utils/trpc";
 
 export const useZoraCoins = () => {
   const [isCreating, setIsCreating] = useState(false);
+  const [isCreatingFromNews, setIsCreatingFromNews] = useState(false);
   const createCoinMutation = trpc.coin.createCoin.useMutation();
+  const createCoinFromNewsMutation = trpc.coin.createCoinFromNews.useMutation();
 
   // Queries
   const getCoinDetailsQuery = trpc.coin.getCoinDetails.useQuery;
@@ -13,12 +15,14 @@ export const useZoraCoins = () => {
   const topCoinsQuery = trpc.coin.getTopCoins.useQuery;
 
   /**
-   * Create a new coin
+   * Create a new coin manually
    */
   const createCoin = async (coinData: {
     name: string;
     symbol: string;
-    uri: string;
+    description: string;
+    image: string;
+    properties?: Record<string, unknown>;
     payoutRecipient: string;
     platformReferrer?: string;
     initialPurchaseWei?: string;
@@ -32,6 +36,28 @@ export const useZoraCoins = () => {
       throw error;
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  /**
+   * Create a new coin from a news article ID
+   */
+  const createCoinFromNews = async (newsData: {
+    articleId: string;
+    symbol: string;
+    payoutRecipient: string;
+    platformReferrer?: string;
+    initialPurchaseWei?: string;
+  }) => {
+    setIsCreatingFromNews(true);
+    try {
+      const result = await createCoinFromNewsMutation.mutateAsync(newsData);
+      return result;
+    } catch (error) {
+      console.error("Failed to create coin from news:", error);
+      throw error;
+    } finally {
+      setIsCreatingFromNews(false);
     }
   };
 
@@ -106,9 +132,11 @@ export const useZoraCoins = () => {
   return {
     // State
     isCreating,
+    isCreatingFromNews,
 
     // Mutations
     createCoin,
+    createCoinFromNews,
 
     // Queries
     getCoinDetails,

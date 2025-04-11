@@ -1,76 +1,104 @@
-import React from "react";
+import React, { useState } from "react";
+// import NewsFeed from "../components/NewsFeed"; // Commented out - Component not found
+// import CoinCreator from "../components/CoinCreator"; // Commented out - Component not found
+import type { NewsArticle } from "@zora-news/shared";
 import ZoraCoinsDisplay from "../components/ZoraCoinsDisplay";
-import { useNews } from "../hooks/useNews";
-import { useZoraCoins } from "../hooks/useZoraCoins";
+import ZoraProfileDisplay from "../components/ZoraProfileDisplay";
+// import { useZoraCoins } from "../hooks/useZoraCoins"; // Not currently needed
 
 const Dashboard: React.FC = () => {
-  const { allNews } = useNews();
-  const { getTopCoins } = useZoraCoins();
+  // const { allNews } = useNews(); // Keep hook import, but comment out usage if not needed
+  // const { getTopCoins } = useZoraCoins(); // Not needed for this layout
 
-  // Fetch top coins
-  const { data: topCoinsData, isLoading: isLoadingCoins } = getTopCoins(6);
+  const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(
+    null
+  );
+  // const [searchTerm, setSearchTerm] = useState(''); // Not used currently
 
-  // Handle coin creation
-  const handleGenerateCoin = async (newsId: string) => {
-    const newsItem = allNews.find((news) => news.id === newsId);
-    if (!newsItem) return;
+  // Fetch top coins - Commented out as ZoraCoinsDisplay might handle its own fetching now?
+  // const { data: topCoinsData, isLoading: isLoadingCoins } = getTopCoins(6);
 
-    // In a real app, you'd want to handle this more robustly
-    // This is just a placeholder implementation
-    alert(`Will generate Zora coin based on: ${newsItem.headline}`);
+  // Handle article selection - Dummy function if NewsFeed is removed
+  const handleArticleSelect = (article: NewsArticle) => {
+    setSelectedArticle(article);
+    console.log("Selected Article (Dummy):", article);
+  };
+
+  // Handle coin creation - Dummy function if CoinCreator is removed
+  const handleGenerateCoin = (articleId: string) => {
+    console.log("Generate Coin Clicked (Dummy) for ID:", articleId);
   };
 
   return (
-    <div className="p-8 font-sans bg-gray-100 min-h-screen">
-      <h1 className="text-center text-gray-800 mb-8 text-4xl font-bold">
-        News-Driven Zora Coin Dashboard
-      </h1>
+    <div className="flex h-screen bg-gray-100">
+      {/* Left Panel: Placeholder for News Feed */}
+      <div className="w-1/3 overflow-y-auto p-4 border-r">
+        <h2 className="text-xl font-semibold mb-4">Trending News</h2>
+        {/* <NewsFeed onArticleSelect={handleArticleSelect} /> */}
+        <p className="text-gray-500">News feed component placeholder.</p>
+        {/* Example button to simulate article selection */}
+        <button
+          onClick={() =>
+            handleArticleSelect({
+              id: "dummy-123",
+              headline: "Example Headline for Testing",
+              summary: "This is a summary.",
+              url: "#",
+              timestamp: new Date().toISOString(),
+            })
+          }
+          className="mt-4 p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Select Example Article
+        </button>
+      </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* News Section - Takes 2/3 of the width on large screens */}
-        <div className="lg:col-span-2">
-          <h2 className="text-gray-700 border-b-2 border-gray-300 pb-2 mb-6 text-2xl font-semibold">
-            Trending News Articles
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[700px] overflow-y-auto pb-4">
-            {allNews.map((news) => (
-              <div
-                key={news.id}
-                className="bg-white rounded-lg p-6 shadow-md transition-transform transform hover:-translate-y-1 hover:shadow-lg"
-              >
-                <h3 className="text-blue-700 mb-2 text-xl font-semibold">
-                  {news.headline}
-                </h3>
-                <p className="mb-4 text-gray-600 text-sm">{news.summary}</p>
-                <div className="flex justify-between items-center">
-                  <a
-                    href={news.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:text-blue-600 hover:underline font-bold text-sm"
-                  >
-                    Read More
-                  </a>
-                  <button
-                    onClick={() => handleGenerateCoin(news.id)}
-                    className="bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600"
-                  >
-                    Generate Coin
-                  </button>
-                </div>
-              </div>
-            ))}
+      {/* Right Panel: Coin Creator and Display */}
+      <div className="w-2/3 overflow-y-auto p-4">
+        {/* Display Selected Article */}
+        {selectedArticle && (
+          <div className="mb-4 p-4 border rounded shadow-sm bg-white">
+            <h3 className="text-lg font-semibold mb-2">
+              Selected Article for Coin Creation
+            </h3>
+            <h4 className="font-medium">{selectedArticle.headline}</h4>
+            <p className="text-sm text-gray-600 mb-2">
+              {selectedArticle.summary}
+            </p>
+            <a
+              href={selectedArticle.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:underline text-xs"
+            >
+              Read More
+            </a>
+            {/* Placeholder button for CoinCreator action */}
+            <button
+              onClick={() => handleGenerateCoin(selectedArticle.id)}
+              className="ml-4 mt-2 p-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
+            >
+              Generate Coin (Placeholder)
+            </button>
           </div>
+        )}
+
+        {/* Placeholder for Coin Creator */}
+        {/* <CoinCreator selectedArticleId={selectedArticle?.id} /> */}
+        <div className="mb-4 p-4 border rounded shadow-sm bg-gray-50">
+          Coin creator component placeholder.
         </div>
 
-        {/* Zora Coins Section - Takes 1/3 of the width on large screens */}
-        <div className="lg:col-span-1">
-          <ZoraCoinsDisplay
-            coins={topCoinsData?.data?.coins}
-            isLoading={isLoadingCoins}
-          />
-        </div>
+        {/* Divider */}
+        <hr className="my-6" />
+
+        {/* Profile Display */}
+        <ZoraProfileDisplay />
+
+        {/* Zora Coins Display */}
+        <ZoraCoinsDisplay
+        // filterIdentifier={searchTerm} // Removed prop
+        />
       </div>
     </div>
   );

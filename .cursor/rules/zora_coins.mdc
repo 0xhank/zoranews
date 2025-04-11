@@ -8,7 +8,7 @@ globs: packages/server/src/routers/coin.ts, packages/client/src/hooks/useZoraCoi
 ## Server Routes
 - Use the coin router for all Zora coin related functionality
 - Each endpoint validates inputs using Zod schemas
-- Routes include: createCoin, getCoinDetails, getAccountCoins, searchCoins, getTopCoins, getRecentCoins
+- Routes include: createCoin, createCoinFromNews, getCoinDetails, getAccountCoins, searchCoins, getTopCoins, getRecentCoins
 - The Base chain is used for all Zora coin operations with configurable RPC URL
 
 ## Client Hooks

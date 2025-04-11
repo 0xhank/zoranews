@@ -1,5 +1,4 @@
 import { TRPCError } from "@trpc/server";
-
 import {
   createCoin,
   getCoin,
@@ -18,16 +17,19 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import { base } from "viem/chains";
 import { z } from "zod";
+
 import { uploadMetadataToIpfs } from "../lib/ipfsUploader";
+import { newsScraper } from "../services/newsScraper";
+import {
+  generateCoinMetadata,
+  generateImageFromHeadline,
+} from "../services/openaiService";
 import { publicProcedure, router } from "../trpc";
 
-// Define validation schemas
-const createCoinSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+// --- Define Schemas --- //
+
+const baseCoinSchema = {
   symbol: z.string().min(1, "Symbol is required"),
-  description: z.string().min(1, "Description is required"),
-  image: z.string().url("Image must be a valid URL"),
-  properties: z.record(z.unknown()).optional(),
   payoutRecipient: z.string().refine((val) => /^0x[a-fA-F0-9]{40}$/.test(val), {
     message: "Invalid Ethereum address format",
   }),
@@ -38,100 +40,199 @@ const createCoinSchema = z.object({
     })
     .optional(),
   initialPurchaseWei: z.string().optional(),
+};
+
+// Schema for creating a coin manually
+const createCoinManualSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  description: z.string().min(1, "Description is required"),
+  image: z.string().url("Image must be a valid URL"),
+  ...baseCoinSchema, // Inherit symbol, recipient, etc.
 });
 
+// Schema for creating a coin from news
+const createCoinFromNewsSchema = z.object({
+  articleId: z.string().min(1, "Article ID is required"),
+  ...baseCoinSchema, // Inherit symbol, recipient, etc.
+});
+
+// Schema for fetching coin details/comments
 const coinAddressSchema = z.object({
   address: z.string().refine((val) => /^0x[a-fA-F0-9]{40}$/.test(val), {
     message: "Invalid Ethereum address format",
   }),
 });
 
+// Schema for profile-related fetches
 const profileSchema = z.object({
   identifier: z.string().min(1, "Identifier is required"),
   count: z.number().min(1).max(100).optional(),
   after: z.string().optional(),
 });
-// Set up base chain RPC URL
+
+// --- Constants --- //
+
 const RPC_URL = process.env.BASE_RPC_URL || "https://mainnet.base.org";
 
+// --- Reusable Coin Creation Logic --- //
+// Takes the manually defined schema as input
+async function executeCoinCreation(
+  input: z.infer<typeof createCoinManualSchema>
+) {
+  try {
+    // Construct metadata object from input
+    const metadataToUpload = {
+      name: input.name,
+      description: input.description,
+      image: input.image,
+      properties: { category: "news" }, // Default to empty object if undefined
+    };
+
+    // Upload metadata to IPFS using the library function
+    const metadataUri = await uploadMetadataToIpfs(
+      metadataToUpload,
+      `CoinMetadata - ${input.symbol}` // Give a meaningful name for Pinata
+    );
+
+    // Create coin call params using the generated URI
+    const coinParams = {
+      name: input.name,
+      symbol: input.symbol,
+      uri: metadataUri,
+      payoutRecipient: input.payoutRecipient as Address,
+      platformReferrer: input.platformReferrer as Address | undefined,
+      initialPurchaseWei: input.initialPurchaseWei
+        ? BigInt(input.initialPurchaseWei)
+        : 0n,
+    };
+
+    // Set up viem clients
+    const publicClient = createPublicClient({
+      chain: base,
+      transport: http(RPC_URL),
+    });
+
+    // Validate private key exists
+    const privateKey = process.env.PRIVATE_KEY;
+    if (!privateKey) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Server wallet private key not configured",
+      });
+    }
+
+    // Create account from private key
+    const account = privateKeyToAccount(privateKey as Hex);
+
+    console.log("Executing coin creation for account:", account.address);
+    const walletClient = createWalletClient({
+      account,
+      chain: base,
+      transport: http(RPC_URL),
+    });
+
+    console.log("Calling Zora SDK createCoin with params:", coinParams);
+    const contractCallParams = await createCoin(
+      coinParams,
+      walletClient,
+      publicClient
+    );
+
+    console.log("Zora SDK call successful:", contractCallParams);
+
+    return {
+      contractCallParams,
+      success: true,
+      message: "Coin creation parameters generated successfully",
+    };
+  } catch (error) {
+    console.error("Error during coin creation execution:", error);
+    // Rethrow specific TRPC errors or wrap others
+    if (error instanceof TRPCError) {
+      throw error;
+    }
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: `Failed to create coin: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    });
+  }
+}
+// --- End Reusable Coin Creation Logic --- //
+
+// --- Main Coin Router --- //
+
 export const coinRouter = router({
-  // Create a new coin
+  // Create a new coin manually (uses the reusable logic)
   createCoin: publicProcedure
-    .input(createCoinSchema)
+    .input(createCoinManualSchema) // Use the manual schema
     .mutation(async ({ input }) => {
+      // Directly call the reusable logic
+      return await executeCoinCreation(input);
+    }),
+
+  // Create a new coin based on a news article
+  createCoinFromNews: publicProcedure
+    .input(createCoinFromNewsSchema) // Use the news schema
+    .mutation(async ({ input }) => {
+      console.log("Initiating createCoinFromNews with input:", input);
+
+      // 1. Fetch News Article
+      const article = newsScraper.getArticleById(input.articleId);
+      if (!article) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `News article with ID ${input.articleId} not found.`,
+        });
+      }
+      console.log("Found article:", article.headline);
+
+      // 2. Generate Coin Data via OpenAI
+      let generatedName: string;
+      let generatedDescription: string;
+      let generatedImageUrl: string;
       try {
-        // Construct metadata object from input
-        const metadataToUpload = {
-          name: input.name,
-          description: input.description,
-          image: input.image,
-          properties: input.properties || {},
-        };
-
-        // Upload metadata to IPFS using the library function
-        const metadataUri = await uploadMetadataToIpfs(
-          metadataToUpload,
-          `CoinMetadata - ${input.symbol}`
+        console.log("Generating metadata from OpenAI...");
+        const metadataResult = await generateCoinMetadata(
+          article.summary || article.headline // Use summary or fallback to headline
         );
-
-        // Create coin call params using the generated URI
-        const coinParams = {
-          name: input.name,
-          symbol: input.symbol,
-          uri: metadataUri,
-          payoutRecipient: input.payoutRecipient as Address,
-          platformReferrer: input.platformReferrer as Address | undefined,
-          initialPurchaseWei: input.initialPurchaseWei
-            ? BigInt(input.initialPurchaseWei)
-            : 0n,
-        };
-        // Set up viem clients
-        const publicClient = createPublicClient({
-          chain: base,
-          transport: http(RPC_URL),
+        generatedName = metadataResult.name;
+        generatedDescription = metadataResult.description;
+        console.log("Generated metadata:", {
+          generatedName,
+          generatedDescription,
         });
 
-        // Validate private key exists
-        const privateKey = process.env.PRIVATE_KEY;
-        if (!privateKey) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Server wallet private key not configured",
-          });
-        }
-
-        // Create account from private key
-        const account = privateKeyToAccount(privateKey as Hex);
-
-        console.log("account", account.address);
-        const walletClient = createWalletClient({
-          account,
-          chain: base,
-          transport: http(RPC_URL),
-        });
-
-        console.log("creating coin");
-        const contractCallParams = await createCoin(
-          coinParams,
-          walletClient,
-          publicClient
-        );
-
-        console.log("coin created", contractCallParams);
-
-        return {
-          contractCallParams,
-          success: true,
-          message: "Coin creation parameters generated successfully",
-        };
+        console.log("Generating image from OpenAI...");
+        generatedImageUrl = await generateImageFromHeadline(article.headline);
+        console.log("Generated image URL:", generatedImageUrl);
       } catch (error) {
+        console.error("Error calling OpenAI service:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to create coin: ${
+          message: `Failed to generate coin data from OpenAI: ${
             error instanceof Error ? error.message : String(error)
           }`,
         });
       }
+
+
+      // Construct the input object conforming to createCoinManualSchema
+      const creationInput: z.infer<typeof createCoinManualSchema> = {
+        name: generatedName, // Use generated name
+        symbol: input.symbol, // Use input symbol
+        description: generatedDescription, // Use generated description
+        image: generatedImageUrl, // Use generated image URL
+        payoutRecipient: input.payoutRecipient, // Pass through
+        platformReferrer: input.platformReferrer, // Pass through
+        initialPurchaseWei: input.initialPurchaseWei, // Pass through
+      };
+
+      console.log("Prepared input for executeCoinCreation:", creationInput);
+
+      // 4. Call the reusable coin creation logic
+      return await executeCoinCreation(creationInput);
     }),
 
   // Get coin details
@@ -247,26 +348,38 @@ export const coinRouter = router({
     .input(z.object({ limit: z.number().min(1).max(100).optional() }))
     .query(async ({ input }) => {
       try {
-        // Call getTopCoins with an empty object as it doesn't accept limit directly
-        const response = await getTopCoins({});
+        const response = await getTopCoins({}); // Assuming this fetches the data
+        const data = response?.data; // Safely access data
 
-        // Access the actual data structure
-        const data = response.data;
-
-        // If the exploreList edges length exceeds the limit, trim it
+        // Check if data and the expected structure exist
         if (
-          input.limit &&
-          data &&
-          data.exploreList &&
-          Array.isArray(data.exploreList.edges)
+          !data ||
+          !data.exploreList ||
+          !Array.isArray(data.exploreList.edges)
         ) {
-          // Limit the edges array
-          data.exploreList.edges = data.exploreList.edges.slice(0, input.limit);
+          console.warn(
+            "Top coins data is not in the expected format or is empty."
+            
+          );
+          return { success: true, data: [] }; // Return empty array if data is missing/malformed
         }
+
+        // Type the edges for sorting
+        type CoinEdge = (typeof data.exploreList.edges)[0];
+
+        // Sort, limit, and return the data
+        const sortedEdges = data.exploreList.edges.sort(
+          (a: CoinEdge, b: CoinEdge) => {
+            // Safely access volume24h, converting to numbers, defaulting to 0 if null/undefined
+            const volumeA = Number(a?.node?.volume24h ?? 0);
+            const volumeB = Number(b?.node?.volume24h ?? 0);
+            return volumeB - volumeA;
+          }
+        );
 
         return {
           success: true,
-          data,
+          data: sortedEdges.slice(0, input.limit || 10), // Limit after sorting
         };
       } catch (error) {
         throw new TRPCError({
