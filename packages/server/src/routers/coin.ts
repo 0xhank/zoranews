@@ -1,14 +1,21 @@
 import { TRPCError } from "@trpc/server";
 
 import {
-  createCoinCall,
+  createCoin,
   getCoin,
   getCoinComments,
   getProfile,
   getProfileBalances,
   getCoinsTopVolume24h as getTopCoins,
 } from "@zoralabs/coins-sdk";
-import { Address } from "viem";
+import {
+  Address,
+  createPublicClient,
+  createWalletClient,
+  Hex,
+  http,
+} from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import { base } from "viem/chains";
 import { z } from "zod";
 import { publicProcedure, router } from "../trpc";
@@ -74,9 +81,39 @@ export const coinRouter = router({
             ? BigInt(input.initialPurchaseWei)
             : 0n,
         };
+        // Set up viem clients
+        const publicClient = createPublicClient({
+          chain: base,
+          transport: http(RPC_URL),
+        });
 
-        // Create coin call params
-        const contractCallParams = createCoinCall(coinParams);
+        // Validate private key exists
+        const privateKey = process.env.PRIVATE_KEY;
+        if (!privateKey) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Server wallet private key not configured",
+          });
+        }
+
+        // Create account from private key
+        const account = privateKeyToAccount(privateKey as Hex);
+
+        console.log("account", account.address);
+        const walletClient = createWalletClient({
+          account,
+          chain: base,
+          transport: http(RPC_URL),
+        });
+
+        console.log("creating coin");
+        const contractCallParams = await createCoin(
+          coinParams,
+          walletClient,
+          publicClient
+        );
+
+        console.log("coin created", contractCallParams);
 
         return {
           contractCallParams,
@@ -206,13 +243,26 @@ export const coinRouter = router({
     .input(z.object({ limit: z.number().min(1).max(100).optional() }))
     .query(async ({ input }) => {
       try {
-        const response = await getTopCoins({
-          limit: input.limit || 10,
-        });
+        // Call getTopCoins with an empty object as it doesn't accept limit directly
+        const response = await getTopCoins({});
+
+        // Access the actual data structure
+        const data = response.data;
+
+        // If the exploreList edges length exceeds the limit, trim it
+        if (
+          input.limit &&
+          data &&
+          data.exploreList &&
+          Array.isArray(data.exploreList.edges)
+        ) {
+          // Limit the edges array
+          data.exploreList.edges = data.exploreList.edges.slice(0, input.limit);
+        }
 
         return {
           success: true,
-          data: response.data,
+          data,
         };
       } catch (error) {
         throw new TRPCError({
@@ -223,5 +273,4 @@ export const coinRouter = router({
         });
       }
     }),
-
 });

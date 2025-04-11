@@ -3,10 +3,6 @@ import { trpc } from "../utils/trpc";
 
 export const useZoraCoins = () => {
   const [isCreating, setIsCreating] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-
-  // Mutations
   const createCoinMutation = trpc.coin.createCoin.useMutation();
 
   // Queries
@@ -14,9 +10,7 @@ export const useZoraCoins = () => {
   const getCoinCommentsQuery = trpc.coin.getCoinComments.useQuery;
   const getProfileQuery = trpc.coin.getProfile.useQuery;
   const getProfileBalancesQuery = trpc.coin.getProfileBalances.useQuery;
-  const searchCoinsQuery = trpc.coin.searchCoins.useQuery;
   const topCoinsQuery = trpc.coin.getTopCoins.useQuery;
-  const recentCoinsQuery = trpc.coin.getRecentCoins.useQuery;
 
   /**
    * Create a new coin
@@ -98,22 +92,6 @@ export const useZoraCoins = () => {
   };
 
   /**
-   * Search for coins
-   */
-  const searchCoins = (query: string, limit = 10, offset = 0) => {
-    setIsSearching(Boolean(query));
-    setSearchTerm(query);
-
-    return searchCoinsQuery(
-      { query, limit, offset },
-      {
-        enabled: Boolean(query),
-        staleTime: 1000 * 60 * 5, // 5 minutes
-      }
-    );
-  };
-
-  /**
    * Get top coins
    */
   const getTopCoins = (limit = 10) => {
@@ -125,23 +103,9 @@ export const useZoraCoins = () => {
     );
   };
 
-  /**
-   * Get recent coins
-   */
-  const getRecentCoins = (limit = 10) => {
-    return recentCoinsQuery(
-      { limit },
-      {
-        staleTime: 1000 * 60 * 5, // 5 minutes
-      }
-    );
-  };
-
   return {
     // State
     isCreating,
-    isSearching,
-    searchTerm,
 
     // Mutations
     createCoin,
@@ -151,8 +115,6 @@ export const useZoraCoins = () => {
     getCoinComments,
     getProfile,
     getProfileBalances,
-    searchCoins,
     getTopCoins,
-    getRecentCoins,
   };
 };

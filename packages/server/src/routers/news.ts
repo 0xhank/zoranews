@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { publicProcedure, router } from "../trpc";
 import { newsScraper } from "../services/newsScraper";
+import { publicProcedure, router } from "../trpc";
 
 export const newsRouter = router({
   getAll: publicProcedure.query(async () => {
