@@ -30,9 +30,12 @@ import { publicProcedure, router } from "../trpc";
 
 const baseCoinSchema = {
   symbol: z.string().min(1, "Symbol is required"),
-  payoutRecipient: z.string().refine((val) => /^0x[a-fA-F0-9]{40}$/.test(val), {
-    message: "Invalid Ethereum address format",
-  }),
+  payoutRecipient: z
+    .string()
+    .refine((val) => /^0x[a-fA-F0-9]{40}$/.test(val), {
+      message: "Invalid Ethereum address format",
+    })
+    .optional(),
   platformReferrer: z
     .string()
     .refine((val) => val === "" || /^0x[a-fA-F0-9]{40}$/.test(val), {
@@ -53,7 +56,7 @@ const createCoinManualSchema = z.object({
 // Schema for creating a coin from news
 const createCoinFromNewsSchema = z.object({
   articleId: z.string().min(1, "Article ID is required"),
-  ...baseCoinSchema, // Inherit symbol, recipient, etc.
+  ...baseCoinSchema, // Inherit symbol, optional recipient, etc.
 });
 
 // Schema for fetching coin details/comments
@@ -174,9 +177,36 @@ export const coinRouter = router({
 
   // Create a new coin based on a news article
   createCoinFromNews: publicProcedure
-    .input(createCoinFromNewsSchema) // Use the news schema
+    .input(createCoinFromNewsSchema) // Use the updated news schema
     .mutation(async ({ input }) => {
       console.log("Initiating createCoinFromNews with input:", input);
+
+      // Determine the final payout recipient
+      let finalPayoutRecipient: Address;
+      const privateKey = process.env.PRIVATE_KEY;
+      if (!privateKey) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Server wallet private key not configured",
+        });
+      }
+      const serverAccount = privateKeyToAccount(privateKey as Hex);
+
+      if (input.payoutRecipient) {
+        // If client provided an address, use it
+        finalPayoutRecipient = input.payoutRecipient as Address;
+        console.log(
+          "Using client-provided payout recipient:",
+          finalPayoutRecipient
+        );
+      } else {
+        // Otherwise, default to the server's address
+        finalPayoutRecipient = serverAccount.address;
+        console.log(
+          "Defaulting payout recipient to server address:",
+          finalPayoutRecipient
+        );
+      }
 
       // 1. Fetch News Article
       const article = newsScraper.getArticleById(input.articleId);
@@ -217,14 +247,13 @@ export const coinRouter = router({
         });
       }
 
-
       // Construct the input object conforming to createCoinManualSchema
       const creationInput: z.infer<typeof createCoinManualSchema> = {
         name: generatedName, // Use generated name
         symbol: input.symbol, // Use input symbol
         description: generatedDescription, // Use generated description
         image: generatedImageUrl, // Use generated image URL
-        payoutRecipient: input.payoutRecipient, // Pass through
+        payoutRecipient: finalPayoutRecipient, // Use the determined recipient
         platformReferrer: input.platformReferrer, // Pass through
         initialPurchaseWei: input.initialPurchaseWei, // Pass through
       };
@@ -359,7 +388,6 @@ export const coinRouter = router({
         ) {
           console.warn(
             "Top coins data is not in the expected format or is empty."
-            
           );
           return { success: true, data: [] }; // Return empty array if data is missing/malformed
         }

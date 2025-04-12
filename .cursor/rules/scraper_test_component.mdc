@@ -1,0 +1,28 @@
+\
+---
+description: Rules for the ScraperTest component, focusing on Zora coin creation from news articles.
+globs: packages/client/src/pages/Scraper/ScraperTest.tsx
+---
+
+# ScraperTest Component Rules
+
+## Coin Creation
+- Use the `useZoraCoins` hook for coin creation functionality.
+- Specifically, use the `createCoinFromNews` mutation.
+- This mutation requires `articleId` and `symbol`.
+- The `payoutRecipient` is optional; if not provided by the client, the server defaults to its own address.
+- The component automatically generates a `symbol` based on the article headline.
+- The client does not need to provide a `payoutRecipient` address.
+- Display status messages for success and error states using `creationStatus` state.
+- Reset the `selectedArticleId` after successful creation.
+
+## UI Elements
+- The component should not contain any input fields for coin creation.
+- The button to trigger creation should be labeled "Create Coin from Article".
+- The button should be disabled using the `isCreatingFromNews` loading state.
+
+## Data Handling
+- Fetch news articles using the `useNewsScraper` hook.
+- Allow users to select an article from the list.
+- Use the `selectedArticle` state to track the chosen article.
+- Pass the `selectedArticle.id` and generated `symbol` to the `createCoinFromNews` mutation. 

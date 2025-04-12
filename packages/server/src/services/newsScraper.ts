@@ -361,12 +361,8 @@ class NewsScraper {
 
         this.seenUrls.add(link);
 
-        // Create article ID based on source and URL
-        const id = `${feed.name
-          .toLowerCase()
-          .replace(/\s+/g, "-")}-${Buffer.from(link)
-          .toString("base64")
-          .substring(0, 10)}`;
+        // Generate a UUID for the article ID
+        const id = crypto.randomUUID();
 
         articles.push({
           id,

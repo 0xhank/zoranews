@@ -19,9 +19,9 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
+    <div className="flex flex-col h-full bg-white">
       <Navigation currentPage={currentPage} onChangePage={setCurrentPage} />
-      <main className="flex-grow">{renderPage()}</main>
+      <main className="h-full">{renderPage()}</main>
     </div>
   );
 }

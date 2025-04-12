@@ -17,15 +17,12 @@ const ScraperTest: React.FC = () => {
     isSearching,
   } = useNewsScraper();
 
-  const { createCoin, isCreating } = useZoraCoins();
+  const { createCoinFromNews, isCreatingFromNews } = useZoraCoins();
 
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(
     null
   );
 
-  const [coinName, setCoinName] = useState("");
-  const [coinSymbol, setCoinSymbol] = useState("");
-  const [payoutAddress, setPayoutAddress] = useState("");
   const [creationStatus, setCreationStatus] = useState<{
     status: "idle" | "success" | "error";
     message: string;
@@ -43,290 +40,260 @@ const ScraperTest: React.FC = () => {
 
   // Get selected article details
   const selectedArticle = articles.find(
-    (article: NewsArticle) => article.id === selectedArticleId
+    (article: NewsArticle) =>
+      `${article.id}-${article.timestamp}` === selectedArticleId
   );
 
-  // Generate coin name and symbol from article
-  const generateCoinNameSymbol = () => {
-    if (!selectedArticle) return;
-
-    // Extract keywords from the headline for the name
-    const headline = selectedArticle.headline;
-    const words = headline.split(" ");
-
-    // Create a name from the first 3-4 significant words
-    const significantWords = words
-      .filter((word) => word.length > 3)
-      .slice(0, 3)
-      .map(
-        (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-      );
-
-    const name = significantWords.join(" ") + " Coin";
-
-    // Create a symbol from the first letters of significant words
-    const symbol = significantWords
-      .map((word) => word.charAt(0).toUpperCase())
-      .join("");
-
-    setCoinName(name);
-    setCoinSymbol(symbol);
-  };
-
-  // Handle coin creation
-  const handleCreateCoin = async () => {
-    if (!selectedArticle || !coinName || !coinSymbol || !payoutAddress) {
+  // Handle coin creation from news article
+  const handleCreateCoinFromNews = async () => {
+    if (!selectedArticle) {
       setCreationStatus({
         status: "error",
-        message: "Please fill all required fields",
+        message: "Please select an article.",
       });
       return;
     }
 
-    try {
-      // For demo purposes, we'll use a mock metadata URI
-      // In a real app, you'd create proper metadata and upload to IPFS
-      const mockMetadataUri = `https://example.com/metadata/${selectedArticleId}.json`;
+    // Generate symbol from headline
+    const headline = selectedArticle.headline;
+    const words = headline.split(" ");
+    const significantWords = words
+      .filter((word) => word.length > 3)
+      .slice(0, 3);
+    const symbol =
+      significantWords.map((word) => word.charAt(0).toUpperCase()).join("") ||
+      "NEWS"; // Fallback symbol
 
-      await createCoin({
-        name: coinName,
-        symbol: coinSymbol,
-        uri: mockMetadataUri,
-        payoutRecipient: payoutAddress,
+    try {
+      await createCoinFromNews({
+        articleId: selectedArticle.id,
+        symbol: symbol, // Provide the generated symbol
       });
 
       setCreationStatus({
         status: "success",
         message:
-          "Coin creation parameters generated successfully! Use these parameters to complete the transaction on the client side.",
+          "Coin creation initiated successfully based on the selected article!",
       });
 
       // Reset form
-      setCoinName("");
-      setCoinSymbol("");
-      setPayoutAddress("");
+      setSelectedArticleId(null); // Optionally clear selection
     } catch (error) {
-      console.error("Error creating coin:", error);
+      console.error("Error creating coin from news:", error);
       setCreationStatus({
         status: "error",
         message:
-          error instanceof Error ? error.message : "Failed to create coin",
+          error instanceof Error
+            ? error.message
+            : "Failed to create coin from news",
       });
     }
   };
 
   return (
-    <div className="p-8 font-sans bg-gray-100 min-h-screen">
-      <h1 className="text-center text-gray-800 mb-4 text-4xl font-bold">
-        News Scraper Testing
+    <div className="font-mono text-green-400 bg-gray-900 p-6 rounded-md border border-green-800 shadow-inner shadow-green-900/20 flex flex-col h-full">
+      <h1 className="text-center text-xl font-bold mb-6 border-b border-green-800 pb-3 text-yellow-400 flex-shrink-0">
+        &gt; News Scraper Interface
       </h1>
 
-      {/* Status and Controls */}
-      <div className="bg-white rounded-lg p-6 shadow-md mb-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-semibold mb-2">Scraper Status</h2>
-            <p className="text-gray-600">
-              Last scraped:{" "}
-              <span className="font-medium">{formatDate(lastScrapedAt)}</span>
-            </p>
-            <p className="text-gray-600">
-              Articles in cache:{" "}
-              <span className="font-medium">{articleCount}</span>
-            </p>
-          </div>
-
-          <div className="mt-4 md:mt-0">
-            <button
-              onClick={() => scrapeNow()}
-              disabled={isScraping}
-              className={`px-4 py-2 rounded-md text-white font-medium ${
-                isScraping
-                  ? "bg-blue-300 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
-              }`}
-            >
-              {isScraping ? "Scraping..." : "Scrape Now"}
-            </button>
-          </div>
-        </div>
-
-        {/* Search */}
-        <div className="mt-4 flex">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
-            placeholder="Search articles..."
-            className="flex-grow px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          {isSearching && (
-            <button
-              onClick={clearSearch}
-              className="bg-gray-200 text-gray-800 px-4 py-2 rounded-r-md hover:bg-gray-300"
-            >
-              Clear
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Article List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 shadow-md">
-          <h2 className="text-xl font-semibold mb-4">
-            {isSearching ? "Search Results" : "Available Articles"}
-            {isSearching && (
-              <span className="ml-2 text-sm">({articles.length} results)</span>
-            )}
-          </h2>
-
-          {isLoading ? (
-            <div className="text-center py-8 text-gray-500">
-              Loading articles...
-            </div>
-          ) : articles.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              {isSearching
-                ? "No articles match your search"
-                : "No articles available"}
-            </div>
-          ) : (
-            <div className="overflow-y-auto max-h-[60vh]">
-              {articles.map((article: NewsArticle) => (
-                <div
-                  key={`article-${article.id}-${article.timestamp}`}
-                  className={`p-4 mb-2 border rounded-md cursor-pointer transition-colors ${
-                    selectedArticleId === article.id
-                      ? "bg-blue-50 border-blue-300"
-                      : "hover:bg-gray-50 border-gray-200"
-                  }`}
-                  onClick={() => setSelectedArticleId(article.id)}
-                >
-                  <h3 className="font-medium text-gray-800 truncate">
-                    {article.headline}
-                  </h3>
-                  <p className="text-sm text-gray-500 truncate">
-                    {article.summary}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Article Details and Coin Creation */}
-        <div className="bg-white rounded-lg p-6 shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Article Details</h2>
-
-          {selectedArticle ? (
+      {/* Make this div scrollable */}
+      <div className="flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-green-700 scrollbar-track-gray-800 pr-2 -mr-2">
+        {/* Status and Controls */}
+        <div className="bg-gray-800 rounded-md p-4 mb-6 border border-green-700 shadow-md">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
             <div>
-              <h3 className="text-lg font-medium text-blue-800 mb-2">
-                {selectedArticle.headline}
-              </h3>
-              <p className="text-gray-600 mb-4">{selectedArticle.summary}</p>
+              <h2 className="text-lg font-semibold mb-2 text-blue-400">
+                ## Scraper Status
+              </h2>
+              <p className="text-green-500">
+                Last scraped:{" "}
+                <span className="font-medium text-yellow-300">
+                  {formatDate(lastScrapedAt)}
+                </span>
+              </p>
+              <p className="text-green-500">
+                Articles in cache:{" "}
+                <span className="font-medium text-yellow-300">
+                  {articleCount}
+                </span>
+              </p>
+            </div>
 
-              <div className="flex flex-col space-y-2 text-sm">
-                <p className="text-gray-500">
-                  <span className="font-medium">ID:</span> {selectedArticle.id}
-                </p>
-                <p className="text-gray-500">
-                  <span className="font-medium">Published:</span>{" "}
-                  {formatDate(selectedArticle.timestamp)}
-                </p>
-                <a
-                  href={selectedArticle.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline inline-block mt-4"
-                >
-                  Read Full Article →
-                </a>
+            <div className="mt-4 md:mt-0">
+              <button
+                onClick={() => scrapeNow()}
+                disabled={isScraping}
+                className={`px-4 py-2 rounded-md font-medium border border-green-600 transition-colors duration-150 ${
+                  isScraping
+                    ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                    : "bg-green-700 text-black hover:bg-green-600 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                }`}
+              >
+                {isScraping ? "Running scrape..." : "[ Scrape Now ]"}
+              </button>
+            </div>
+          </div>
+
+          {/* Search */}
+          <div className="mt-4 flex">
+            <span className="px-2 py-2 bg-gray-700 border border-r-0 border-green-700 rounded-l-md text-yellow-400">
+              $
+            </span>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              placeholder="grep articles..."
+              className="flex-grow px-4 py-2 border border-green-700 bg-gray-800 text-green-400 focus:outline-none focus:ring-1 focus:ring-yellow-500 placeholder-gray-500"
+            />
+            {isSearching && (
+              <button
+                onClick={clearSearch}
+                className="bg-red-700 text-black px-4 py-2 rounded-r-md hover:bg-red-600 border border-l-0 border-red-600"
+              >
+                Clear
+              </button>
+            )}
+            {!isSearching && (
+              <span className="px-2 py-2 bg-gray-700 border border-l-0 border-green-700 rounded-r-md text-yellow-400">
+                ↵
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Article List & Details Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Article List Panel */}
+          <div className="bg-gray-800 rounded-md p-4 border border-green-700 shadow-md">
+            <h2 className="text-lg font-semibold mb-4 text-blue-400 border-b border-green-800 pb-2">
+              ## {isSearching ? "Search Results" : "Available Articles"}
+              {isSearching && (
+                <span className="ml-2 text-sm text-yellow-400">
+                  ({articles.length} results)
+                </span>
+              )}
+            </h2>
+
+            {isLoading ? (
+              <div className="text-center py-8 text-yellow-500 animate-pulse">
+                Loading articles...
               </div>
-
-              <div className="mt-6 p-4 bg-gray-50 rounded-md">
-                <h4 className="font-medium mb-4">Create Zora Coin</h4>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Coin Name
-                    </label>
-                    <input
-                      type="text"
-                      value={coinName}
-                      onChange={(e) => setCoinName(e.target.value)}
-                      placeholder="Enter coin name"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    />
+            ) : articles.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                {isSearching
+                  ? "No articles match grep pattern"
+                  : "No articles found in cache"}
+              </div>
+            ) : (
+              <div className="overflow-y-auto max-h-[55vh] pr-2 scrollbar-thin scrollbar-thumb-green-700 scrollbar-track-gray-700">
+                {articles.map((article: NewsArticle) => (
+                  <div
+                    key={`${article.id}-${article.timestamp}`}
+                    className={`p-3 mb-2 border rounded-md cursor-pointer transition-colors duration-150 ${
+                      selectedArticleId === `${article.id}-${article.timestamp}`
+                        ? "bg-green-900 border-green-500 ring-1 ring-green-400"
+                        : "hover:bg-gray-700 border-green-800 hover:border-green-600"
+                    }`}
+                    onClick={() =>
+                      setSelectedArticleId(`${article.id}-${article.timestamp}`)
+                    }
+                  >
+                    <h3 className="font-medium text-green-300 truncate">
+                      {article.headline}
+                    </h3>
+                    <p className="text-sm text-gray-400 truncate">
+                      {article.summary || "No summary available."}
+                    </p>
                   </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Symbol
-                    </label>
-                    <input
-                      type="text"
-                      value={coinSymbol}
-                      onChange={(e) => setCoinSymbol(e.target.value)}
-                      placeholder="Enter coin symbol (3-4 chars)"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    />
-                  </div>
+          {/* Article Details and Coin Creation Panel */}
+          <div className="bg-gray-800 rounded-md p-4 border border-green-700 shadow-md">
+            <h2 className="text-lg font-semibold mb-4 text-blue-400 border-b border-green-800 pb-2">
+              ## Article Details
+            </h2>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Payout Address (ETH)
-                    </label>
-                    <input
-                      type="text"
-                      value={payoutAddress}
-                      onChange={(e) => setPayoutAddress(e.target.value)}
-                      placeholder="0x..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    />
-                  </div>
+            {selectedArticle ? (
+              <div>
+                <h3 className="text-md font-semibold text-yellow-300 mb-2">
+                  {selectedArticle.headline}
+                </h3>
+                <p className="text-green-400 mb-4 text-sm">
+                  {selectedArticle.summary || "Summary not available."}
+                </p>
 
-                  <div className="flex space-x-3">
-                    <button
-                      onClick={generateCoinNameSymbol}
-                      className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-                    >
-                      Auto-Generate
-                    </button>
+                <div className="flex flex-col space-y-1 text-xs mb-4 border-t border-b border-green-800 py-3">
+                  <p className="text-gray-400">
+                    <span className="font-medium text-cyan-400">ID:</span>{" "}
+                    {selectedArticle.id}
+                  </p>
+                  <p className="text-gray-400">
+                    <span className="font-medium text-cyan-400">
+                      Published:
+                    </span>{" "}
+                    {formatDate(selectedArticle.timestamp)}
+                  </p>
+                  <a
+                    href={selectedArticle.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:underline inline-block mt-2 hover:text-blue-400"
+                  >
+                    cat full_article.txt →
+                  </a>
+                </div>
 
-                    <button
-                      onClick={handleCreateCoin}
-                      disabled={isCreating}
-                      className={`px-4 py-2 rounded-md text-white font-medium ${
-                        isCreating
-                          ? "bg-green-300 cursor-not-allowed"
-                          : "bg-green-600 hover:bg-green-700"
-                      }`}
-                    >
-                      {isCreating ? "Creating..." : "Create Coin"}
-                    </button>
-                  </div>
+                <div className="mt-4 p-3 bg-gray-900 rounded-md border border-green-800">
+                  <h4 className="font-medium mb-3 text-yellow-400">
+                    ### Create Zora Coin
+                  </h4>
 
-                  {creationStatus.status !== "idle" && (
-                    <div
-                      className={`mt-3 p-3 rounded-md ${
-                        creationStatus.status === "success"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {creationStatus.message}
+                  <div className="space-y-3">
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={handleCreateCoinFromNews}
+                        disabled={isCreatingFromNews}
+                        className={`px-4 py-2 rounded-md font-medium border border-green-600 transition-colors duration-150 text-sm ${
+                          isCreatingFromNews
+                            ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                            : "bg-green-700 text-black hover:bg-green-600 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        }`}
+                      >
+                        {isCreatingFromNews
+                          ? "Executing..."
+                          : "[ Create Coin ]"}
+                      </button>
                     </div>
-                  )}
+
+                    {creationStatus.status !== "idle" && (
+                      <div
+                        className={`mt-3 p-2 rounded-md text-sm border ${
+                          creationStatus.status === "success"
+                            ? "bg-green-900 border-green-700 text-green-300"
+                            : "bg-red-900 border-red-700 text-red-300"
+                        }`}
+                      >
+                        <span className="font-bold">
+                          {creationStatus.status === "success"
+                            ? "Success:"
+                            : "Error:"}{" "}
+                        </span>
+                        {creationStatus.message}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              Select an article to view details
-            </div>
-          )}
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                Select an article to view details...
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

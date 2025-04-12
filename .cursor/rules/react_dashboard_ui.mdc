@@ -1,0 +1,37 @@
+---
+description: Rules for the React dashboard UI components, including the terminal aesthetic and tab structure.
+globs: packages/client/src/pages/Dashboard.tsx, packages/client/src/pages/Scraper/ScraperTest.tsx, packages/client/src/components/ZoraCoinsDisplay.tsx
+---
+
+# React Dashboard UI Rules
+
+## General Aesthetic (Terminal Theme)
+- Background Color: Primarily dark grays (`bg-black`, `bg-gray-900`, `bg-gray-800`)
+- Text Color: Primarily bright greens (`text-green-400`), with accents of yellow (`text-yellow-400`), blue (`text-blue-400`), and cyan (`text-cyan-400`).
+- Font: Monospaced (`font-mono`)
+- Borders: Use green borders (`border-green-800`, `border-green-700`) to delineate sections.
+- Interactive Elements: Buttons and selected items often use brighter green backgrounds (`bg-green-700`) or highlights (`ring-green-400`).
+- Scrollbars: Styled to match the theme (`scrollbar-thin scrollbar-thumb-green-700 scrollbar-track-gray-700`).
+- Shadow: Subtle inner shadows may be used (`shadow-inner`).
+
+## Dashboard Layout (`Dashboard.tsx`)
+- Structure: Uses a flex column layout (`flex flex-col h-screen`).
+- Header: Contains the main title `[ Zora News Terminal ]`.
+- Navigation: Uses tabs (`<nav>`, `<button>`) to switch between main sections.
+- Active Tab Styling: Active tabs have a distinct background (`bg-green-700`, `text-black`).
+- Main Content Area: Enclosed in a bordered container (`border border-green-800 rounded-b-md rounded-tr-md p-4 bg-gray-900`).
+- Footer: Provides status information (`border-t border-green-800`).
+
+## Scraper Tab (`ScraperTest.tsx`)
+- Layout: Contained within the Dashboard's main content area.
+- Sections: Uses grids (`grid`) and flexbox for layout.
+- Styling: Adheres strictly to the terminal theme rules.
+- Interactivity: Buttons (`<button>`), input fields (`<input>`), and clickable article items follow theme conventions.
+- Search Input: Prefixed with a `$` sign and ends with `↵` when not actively searching.
+- Article List: Selected articles are highlighted (`bg-green-900 border-green-500`).
+
+## Zora Coins Tab (`ZoraCoinsDisplay.tsx`)
+- Layout: Uses a grid (`grid`) to display coin cards.
+- Styling: Adheres strictly to the terminal theme rules.
+- Coin Cards: Display image (or placeholder), name, symbol, and description within a themed container (`bg-gray-800 rounded-md p-4 border border-green-700`).
+- Loading/Error States: Styled consistently with the theme (`text-yellow-500`, `text-red-400`). 

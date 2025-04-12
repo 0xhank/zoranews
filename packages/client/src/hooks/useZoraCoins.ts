@@ -45,7 +45,6 @@ export const useZoraCoins = () => {
   const createCoinFromNews = async (newsData: {
     articleId: string;
     symbol: string;
-    payoutRecipient: string;
     platformReferrer?: string;
     initialPurchaseWei?: string;
   }) => {

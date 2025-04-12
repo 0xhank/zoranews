@@ -33,16 +33,17 @@ export async function generateCoinMetadata(
         {
           role: "system",
           content:
-            'You are an AI assistant designed to create memecoin metadata based on news articles. Given the article content, generate a short, catchy, and relevant coin name (max 30 chars) and a brief, witty description (max 100 chars). Format the output as JSON with keys "name" and "description".',
+            'You are an AI assistant designed to create a catchy social post based on news articles. Given the article content, generate a clear, specific, short, catchy, and relevant title (max 30 chars) and a witty description (max 1000 chars). Format the output as JSON with keys "name" and "description".',
         },
         { role: "user", content: articleContent },
       ],
       response_format: { type: "json_object" },
       temperature: 0.7,
-      max_tokens: 100,
+      max_tokens: 1200,
     });
 
     const result = completion.choices[0]?.message?.content;
+    console.log("Generated metadata:", result);
     if (!result) {
       throw new Error("Failed to generate metadata from OpenAI.");
     }
