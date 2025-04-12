@@ -1,58 +1,71 @@
-@import "tailwindcss";
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@layer base {
+  :root {
+    /* Define modern color palette variables (optional but good practice) */
+    --color-background: #ffffff; /* White background */
+    --color-text-primary: #111827; /* Dark gray text (gray-900) */
+    --color-text-secondary: #6b7280; /* Medium gray text (gray-500) */
+    --color-border: #e5e7eb; /* Light gray border (gray-200) */
+    --color-accent: #3b82f6; /* Blue accent (blue-500) */
+    --color-accent-hover: #2563eb; /* Darker blue accent (blue-600) */
+    --color-card-bg: #f9fafb; /* Very light gray for cards (gray-50) */
+    --color-success: #10b981; /* Green for success (emerald-500) */
+    --color-error: #ef4444; /* Red for error (red-500) */
+  }
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  html,
+  body {
+    @apply bg-background text-text-primary;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+      "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif,
+      "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+      "Noto Color Emoji";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  body {
+    min-height: 100vh;
+    margin: 0; /* Reset default margin */
+  }
+
+  /* Remove default button styling if needed, rely on Tailwind classes */
+  button {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent;
+    /* Add other base button styles if desired, or handle entirely with utility classes */
+  }
+
+  /* Base link styling */
+  a {
+    @apply text-accent hover:text-accent-hover;
+    text-decoration: none; /* Remove underline by default */
+  }
+  a:hover {
+    @apply underline; /* Add underline on hover */
+  }
+
+  /* Remove default scrollbar styling */
+  /* Let the browser handle default scrollbars for a cleaner look */
+
+  /* Ensure Tailwind applies correctly */
+  *,
+  ::before,
+  ::after {
+    border-color: theme(
+      "colors.gray.200",
+      currentColor
+    ); /* Default border color */
+  }
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+/* Keep any component or utility layers if you have them */
+@layer components {
+  /* Add component styles here if needed */
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-
-  min-height: 100vh;
+@layer utilities {
+  /* Add utility styles here if needed */
 }
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-

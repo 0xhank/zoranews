@@ -12,12 +12,14 @@ const ZoraProfileDisplay: React.FC = () => {
     error,
   } = getProfile(PROFILE_IDENTIFIER);
 
-  console.log("profileResponse", profileResponse);
-  const profile = profileResponse?.data?.profile; // Navigate the nested structure
+  const profile = profileResponse?.success
+    ? profileResponse.data?.profile
+    : null; // Ensure success check
 
   if (isLoading) {
     return (
-      <div className="p-4 border rounded shadow-sm mb-4 bg-gray-50">
+      // Consistent loading state styling
+      <div className="p-4 border border-gray-200 rounded-lg shadow-sm mb-4 bg-gray-50 text-gray-500 text-sm">
         Loading profile...
       </div>
     );
@@ -25,35 +27,48 @@ const ZoraProfileDisplay: React.FC = () => {
 
   if (error) {
     return (
-      <div className="p-4 border rounded shadow-sm mb-4 bg-red-100 text-red-700">
-        Error loading profile: {error.message}
+      // Consistent error state styling
+      <div className="p-4 border border-red-200 rounded-lg shadow-sm mb-4 bg-red-50 text-red-800 text-sm">
+        <p className="font-medium">Error loading profile:</p>
+        <p>{error.message || "An unknown error occurred."}</p>
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="p-4 border rounded shadow-sm mb-4 bg-yellow-100 text-yellow-700">
-        Profile not found for {PROFILE_IDENTIFIER}.
+      // Consistent "not found" / empty state styling (using yellow)
+      <div className="p-4 border border-yellow-200 rounded-lg shadow-sm mb-4 bg-yellow-50 text-yellow-800 text-sm">
+        Profile not found for identifier: {PROFILE_IDENTIFIER}.
       </div>
     );
   }
 
   return (
-    <div className="p-4 border rounded shadow-sm mb-4 bg-white flex items-center space-x-4">
+    // Main profile card - slight adjustments for consistency
+    <div className="p-4 border border-gray-200 rounded-lg shadow-sm mb-4 bg-white flex items-center space-x-4">
       {profile.avatar && (
         <img
-          src={profile.avatar.medium}
+          // Use provided avatar or a fallback
+          src={profile.avatar.medium || "./placeholder-avatar.png"} // Ensure you have a placeholder image if needed
           alt={`${profile.displayName || "Profile"} avatar`}
-          className="w-16 h-16 rounded-full border"
+          className="w-12 h-12 rounded-full border border-gray-200 bg-gray-100" // Slightly smaller avatar, added bg color
+          loading="lazy"
         />
       )}
-      <div className="flex flex-col text-black">
-        {profile.handle ?? "No handle"}
-        <h2 className="text-xl font-semibold">
+      <div className="flex-grow">
+        {/* Display name as primary heading */}
+        <h2 className="text-base font-semibold text-gray-900">
           {profile.displayName || "Unnamed Profile"}
         </h2>
-        {profile.bio && <p className="text-gray-600 mt-1">{profile.bio}</p>}
+        {/* Handle as secondary info */}
+        {profile.handle && (
+          <p className="text-sm text-gray-500">@{profile.handle}</p>
+        )}
+        {/* Bio styling */}
+        {profile.bio && (
+          <p className="text-sm text-gray-600 mt-1">{profile.bio}</p>
+        )}
       </div>
     </div>
   );

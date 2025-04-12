@@ -17,40 +17,43 @@ const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"scraper" | "zora">("scraper");
 
   return (
-    <div className="flex flex-col h-full bg-black text-green-400 font-mono p-4">
-      {/* Header */}
-      <header className="mb-4 border-b border-green-800 pb-2">
-        <h1 className="text-2xl font-bold">[ Zora News Terminal ]</h1>
-        {/* Could add user info or connection status here */}
-        {/* <ProfileDisplay /> */}
+    <div className="flex flex-col flex-grow bg-gray-50 p-6">
+      {/* Header - Simplified with bottom border */}
+      <header className="mb-6 border-b border-gray-200 pb-4">
+        <h1 className="text-xl font-semibold text-gray-900">
+          Zora News Dashboard
+        </h1>
+        {/* Optional: Add description or subtitle */}
+        {/* <p className="text-sm text-gray-500">Monitor news and manage coins</p> */}
       </header>
 
-      {/* Tab Navigation */}
-      <nav className="flex mb-4">
+      {/* Tab Navigation - Modern style */}
+      <nav className="flex border-b border-gray-200 mb-6">
         <button
           onClick={() => setActiveTab("scraper")}
-          className={`px-4 py-2 mr-2 ${
+          className={`px-4 py-2 -mb-px border-b-2 text-sm font-medium transition-colors duration-150 focus:outline-none ${
             activeTab === "scraper"
-              ? "bg-green-700 text-black"
-              : "bg-gray-800 text-green-400 hover:bg-green-900"
-          } border border-green-800 rounded-t-md focus:outline-none`}
+              ? "border-blue-500 text-blue-600" // Active tab style
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" // Inactive tab style
+          }`}
         >
-          ~/news-scraper
+          News Scraper
         </button>
         <button
           onClick={() => setActiveTab("zora")}
-          className={`px-4 py-2 ${
+          className={`px-4 py-2 -mb-px ml-4 border-b-2 text-sm font-medium transition-colors duration-150 focus:outline-none ${
             activeTab === "zora"
-              ? "bg-green-700 text-black"
-              : "bg-gray-800 text-green-400 hover:bg-green-900"
-          } border border-green-800 rounded-t-md focus:outline-none`}
+              ? "border-blue-500 text-blue-600" // Active tab style
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" // Inactive tab style
+          }`}
         >
-          ~/zora-coins
+          Zora Coins
         </button>
       </nav>
 
-      {/* Main Content Area */}
-      <main className="flex-grow overflow-y-auto border border-green-800 rounded-b-md rounded-tr-md p-4 bg-gray-900 shadow-inner shadow-green-900/30">
+      {/* Main Content Area - Simplified background and padding, let content handle specifics */}
+      {/* Removed explicit border and shadow, added flex-grow to allow content like ScraperTest to manage its own height */}
+      <main className="flex-grow overflow-y-auto">
         {activeTab === "scraper" && <ScraperTest />}
         {activeTab === "zora" && <ZoraCoinsDisplay />}
       </main>

@@ -1,0 +1,17 @@
+---
+description: Guidelines for AI-driven content generation services, including OpenAI interactions.
+globs:
+  - packages/server/src/services/openaiService.ts
+---
+
+# AI Content Generation
+
+## OpenAI Service (`openaiService.ts`)
+
+- System prompts should clearly define the AI's role, desired output format (e.g., JSON), and provide specific examples where helpful.
+- Input validation should be performed on data passed to OpenAI functions.
+- Output validation should be performed on the response received from OpenAI, especially when expecting structured data like JSON.
+- Use appropriate OpenAI models (e.g., `gpt-4o-mini`, `dall-e-3`) based on the task requirements and cost considerations.
+- Handle potential errors from the OpenAI API gracefully (e.g., API key issues, generation failures, network errors).
+- Manage API keys securely using environment variables (`.env`) and avoid committing them, following guidelines in `server_env.mdc`.
+- Ensure prompts are designed to minimize ambiguity and guide the AI towards the desired output style and constraints (e.g., character limits). 

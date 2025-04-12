@@ -6,10 +6,10 @@ export const useNewsScraper = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Get all news articles
-  const allNewsQuery = trpc.newsRouter.getAll.useQuery();
+  const allNewsQuery = trpc.news.getAll.useQuery();
 
   // Get scraping status
-  const scrapingStatusQuery = trpc.newsRouter.getScrapingStatus.useQuery(
+  const scrapingStatusQuery = trpc.news.getScrapingStatus.useQuery(
     undefined,
     {
       // Refresh every 30 seconds
@@ -18,7 +18,7 @@ export const useNewsScraper = () => {
   );
 
   // Trigger manual scraping
-  const scrapeNowMutation = trpc.newsRouter.scrapeNow.useMutation({
+  const scrapeNowMutation = trpc.news.scrapeNow.useMutation({
     onSuccess: (result) => {
       // Refresh the news and status after scraping
       allNewsQuery.refetch();
@@ -28,7 +28,7 @@ export const useNewsScraper = () => {
   });
 
   // Search articles
-  const searchQuery = trpc.newsRouter.search.useQuery(
+      const searchQuery = trpc.news.search.useQuery(
     { query: searchTerm },
     {
       enabled: isSearching && searchTerm.length > 0,

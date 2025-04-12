@@ -30,8 +30,49 @@ export async function generateCoinMetadata(
       messages: [
         {
           role: "system",
-          content:
-            'You are an AI assistant designed to create a catchy social post based on news articles. Given the article content, generate a clear, specific, short, catchy, and relevant title (max 30 chars) and a witty description (max 1000 chars). In addition, create a ticker symbol for the token. Format the output as JSON with keys "symbol", "name" and "description".',
+          content: `You are an AI assistant designed to create elements for a catchy social media post based on news articles or short news snippets. Your goal is to capture the essence and potential market sentiment of the news in a way that's engaging for a 'degen' audience interested in memecoins.
+
+Given the article content or news snippet, generate:
+1.  **Symbol:** A short, relevant ticker symbol (3-5 uppercase letters).
+2.  **Name:** A clear, specific, short, catchy, and relevant title (max 30 chars).
+3.  **Description:** A witty, concise description (max 1000 chars) summarizing the news's core point and potential impact, often with a slightly humorous or exaggerated tone suitable for social media.
+
+Format the output strictly as JSON with keys "symbol", "name", and "description".
+
+---
+**Examples of Symbol Outputs:**
+
+*   STBLZ
+*   INFL8
+*   PEACE
+*   JOKE
+*   TRFF
+*   NODLY
+*   BLUFF
+---
+
+**Examples of Name Outputs:**
+
+*   FED STABILIZE NOW
+*   BLACKROCK INFLATION CALL
+*   XI'S TARIFF PEACE
+*   CHINA CALLS USA JOKE
+*   TRUMP TARIFF TACTICS
+*   NO TARIFF DELAY
+*   BESSENT'S 2S BLUFF
+---
+
+**Examples of Description Outputs:**
+
+*   JUST IN: 🇺🇸 Top Fed official says the Federal Reserve is ready to help stabilize the market if needed.
+*   JUST IN: 🇺🇸 BlackRock CEO Larry Fink says there will be much greater inflation in the United States.
+*   JUST IN: 🇨🇳 Chinese President Xi Jinping says "there are no winners in tariff wars, going against the world will only lead to self isolation."
+*   JUST IN: 🇨🇳🇺🇸 China says the United States is "weaponizing tariffs as a tool of bullying and coercion, turning itself into a joke."
+*   JUST IN: Sources close to the Trump White House say they are pressing on with their tariff plan based on this calculation: that the tumult in on Wall Street in stock market, while significant, will not be matched by a similar tumult in the main street economy"
+*   JUST IN: White House confirms President Trump "is not considering an extension or delay [of the tariffs]... it's about time we have a president in the Oval Office who is putting the world on notice.
+*   JUST IN: U.S. Treasury Secretary Scott Bessent says "I think it was a big mistake, this Chinese escalation, because they are playing with a pair of 2s"
+---
+`,
         },
         { role: "user", content: articleContent },
       ],
@@ -48,7 +89,11 @@ export async function generateCoinMetadata(
 
     const parsedResult = JSON.parse(result);
     // Basic validation
-    if (!parsedResult.name || !parsedResult.description || !parsedResult.symbol) {
+    if (
+      !parsedResult.name ||
+      !parsedResult.description ||
+      !parsedResult.symbol
+    ) {
       throw new Error("Invalid metadata format received from OpenAI.");
     }
 
