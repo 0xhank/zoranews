@@ -29,25 +29,20 @@ import { publicProcedure, router } from "../trpc";
 // --- Define Schemas --- //
 
 const baseCoinSchema = {
-  symbol: z.string().min(1, "Symbol is required"),
   payoutRecipient: z
     .string()
     .refine((val) => /^0x[a-fA-F0-9]{40}$/.test(val), {
       message: "Invalid Ethereum address format",
     })
     .optional(),
-  platformReferrer: z
-    .string()
-    .refine((val) => val === "" || /^0x[a-fA-F0-9]{40}$/.test(val), {
-      message: "Invalid Ethereum address format",
-    })
-    .optional(),
+ 
   initialPurchaseWei: z.string().optional(),
 };
 
 // Schema for creating a coin manually
 const createCoinManualSchema = z.object({
   name: z.string().min(1, "Name is required"),
+  symbol: z.string().min(1, "Symbol is required"),
   description: z.string().min(1, "Description is required"),
   image: z.string().url("Image must be a valid URL"),
   ...baseCoinSchema, // Inherit symbol, recipient, etc.
@@ -79,13 +74,14 @@ const RPC_URL = process.env.BASE_RPC_URL || "https://mainnet.base.org";
 
 // --- Reusable Coin Creation Logic --- //
 // Takes the manually defined schema as input
-async function executeCoinCreation(
+export async function executeCoinCreation(
   input: z.infer<typeof createCoinManualSchema>
 ) {
   try {
     // Construct metadata object from input
     const metadataToUpload = {
       name: input.name,
+      symbol: input.symbol,
       description: input.description,
       image: input.image,
       properties: { category: "news" }, // Default to empty object if undefined
@@ -94,7 +90,7 @@ async function executeCoinCreation(
     // Upload metadata to IPFS using the library function
     const metadataUri = await uploadMetadataToIpfs(
       metadataToUpload,
-      `CoinMetadata - ${input.symbol}` // Give a meaningful name for Pinata
+      `CoinMetadata - ${input.name}`
     );
 
     // Create coin call params using the generated URI
@@ -103,7 +99,7 @@ async function executeCoinCreation(
       symbol: input.symbol,
       uri: metadataUri,
       payoutRecipient: input.payoutRecipient as Address,
-      platformReferrer: input.platformReferrer as Address | undefined,
+      platformReferrer: input.payoutRecipient,
       initialPurchaseWei: input.initialPurchaseWei
         ? BigInt(input.initialPurchaseWei)
         : 0n,
@@ -220,6 +216,7 @@ export const coinRouter = router({
       // 2. Generate Coin Data via OpenAI
       let generatedName: string;
       let generatedDescription: string;
+      let generatedSymbol: string;
       let generatedImageUrl: string;
       try {
         console.log("Generating metadata from OpenAI...");
@@ -228,9 +225,11 @@ export const coinRouter = router({
         );
         generatedName = metadataResult.name;
         generatedDescription = metadataResult.description;
+        generatedSymbol = metadataResult.symbol;
         console.log("Generated metadata:", {
           generatedName,
           generatedDescription,
+          generatedSymbol,
         });
 
         console.log("Generating image from OpenAI...");
@@ -249,11 +248,10 @@ export const coinRouter = router({
       // Construct the input object conforming to createCoinManualSchema
       const creationInput: z.infer<typeof createCoinManualSchema> = {
         name: generatedName, // Use generated name
-        symbol: input.symbol, // Use input symbol
+        symbol: generatedSymbol, // Use generated symbol
         description: generatedDescription, // Use generated description
         image: generatedImageUrl, // Use generated image URL
         payoutRecipient: finalPayoutRecipient, // Use the determined recipient
-        platformReferrer: input.platformReferrer, // Pass through
         initialPurchaseWei: input.initialPurchaseWei, // Pass through
       };
 

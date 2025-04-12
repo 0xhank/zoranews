@@ -1,0 +1,19 @@
+---
+description: Rules and structure for the automated news-to-coin workflow router.
+globs: packages/server/src/routers/workflow.ts
+---
+
+# Workflow Router
+
+## Procedure: createCoinFromNews
+
+- Orchestrates the end-to-end process: fetching news, selecting an article, and creating a Zora coin.
+- This procedure is a `mutation` and takes no input parameters.
+- It utilizes caller instances to invoke procedures from other routers:
+    - Calls `newsRouter` (expects a procedure like `getLatestHeadline`) to retrieve the latest news article.
+    - Calls `coinRouter` (expects a procedure like `createCoin`) to mint the Zora coin.
+- Performs necessary data transformation to derive coin parameters (name, symbol, description, URI) from the fetched news article.
+- Incorporates Zod schemas (`ArticleSchema`, `CoinSchema`, `CreateCoinInputSchema`) for validating data structures at various stages.
+    - Note: These schemas within `workflow.ts` are placeholders and should mirror the actual schemas used by the called procedures in `newsRouter` and `coinRouter`.
+- Outputs the details of the successfully created coin, conforming to the `CoinSchema`.
+- Includes comprehensive logging and error handling using `TRPCError` for robust operation. 

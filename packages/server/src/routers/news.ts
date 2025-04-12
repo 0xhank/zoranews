@@ -32,6 +32,7 @@ export const newsRouter = router({
   scrapeNow: publicProcedure.mutation(async () => {
     const articles = await newsScraper.scrapeAll();
     return {
+      articles,
       count: articles.length,
       timestamp: new Date().toISOString(),
     };

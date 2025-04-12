@@ -21,7 +21,7 @@ const openai = apiKey ? new OpenAI({ apiKey }) : null;
  */
 export async function generateCoinMetadata(
   articleContent: string
-): Promise<{ name: string; description: string }> {
+): Promise<{ name: string; description: string; symbol: string }> {
   if (!openai) {
     throw new Error("OpenAI API key not configured.");
   }
@@ -33,7 +33,7 @@ export async function generateCoinMetadata(
         {
           role: "system",
           content:
-            'You are an AI assistant designed to create a catchy social post based on news articles. Given the article content, generate a clear, specific, short, catchy, and relevant title (max 30 chars) and a witty description (max 1000 chars). Format the output as JSON with keys "name" and "description".',
+            'You are an AI assistant designed to create a catchy social post based on news articles. Given the article content, generate a clear, specific, short, catchy, and relevant title (max 30 chars) and a witty description (max 1000 chars). In addition, create a ticker symbol for the token. Format the output as JSON with keys "symbol", "name" and "description".',
         },
         { role: "user", content: articleContent },
       ],
@@ -50,11 +50,15 @@ export async function generateCoinMetadata(
 
     const parsedResult = JSON.parse(result);
     // Basic validation
-    if (!parsedResult.name || !parsedResult.description) {
+    if (!parsedResult.name || !parsedResult.description || !parsedResult.symbol) {
       throw new Error("Invalid metadata format received from OpenAI.");
     }
 
-    return parsedResult as { name: string; description: string };
+    return parsedResult as {
+      name: string;
+      description: string;
+      symbol: string;
+    };
   } catch (error) {
     console.error("Error generating coin metadata with OpenAI:", error);
     throw new Error("Failed to generate coin metadata.");
