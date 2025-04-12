@@ -61,7 +61,7 @@ export async function generateCoinMetadata(
     };
   } catch (error) {
     console.error("Error generating coin metadata with OpenAI:", error);
-    throw new Error("Failed to generate coin metadata.");
+    throw new Error("Failed to generate coin metadata: " + error);
   }
 }
 
