@@ -1,7 +1,13 @@
-import { NewsArticle } from "@zora-news/shared";
 import axios from "axios";
 import { XMLParser } from "fast-xml-parser";
 
+export interface NewsArticle {
+    id: string;
+    headline: string;
+    summary: string;
+    url: string;
+    timestamp: string;
+}
 /**
  * RSS Feed configuration
  */
