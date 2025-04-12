@@ -72,7 +72,7 @@ export const workflowRouter = router({
         // This procedure should handle scraping and selecting the top article.
         // It's assumed to return an object matching ArticleSchema or null/undefined if none found.
         const { articles } = await newsCaller.scrapeNow();
-        console.log("Fetched articles:", articles);
+        console.log("Fetched articles:");
         // Validate the fetched article structure
         const parsedArticle = ArticleSchema.safeParse(articles[0]);
         if (!parsedArticle.success) {
@@ -88,7 +88,7 @@ export const workflowRouter = router({
           });
         }
         article = parsedArticle.data;
-        console.log("Fetched article:", article.headline);
+        console.log("Fetched article:");
       } catch (error) {
         console.error("Error fetching news:", error);
         // Catch errors specifically from the news fetching/parsing step
@@ -131,7 +131,7 @@ export const workflowRouter = router({
         // return;
         console.log("Generating image from OpenAI...");
         generatedImageUrl = await generateImageFromHeadline(article.headline);
-        console.log("Generated image URL:", generatedImageUrl);
+        console.log("Generated image URL");
       } catch (error) {
         console.error("Error calling OpenAI service:", error);
         throw new TRPCError({

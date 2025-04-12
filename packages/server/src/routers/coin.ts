@@ -122,21 +122,17 @@ export async function executeCoinCreation(
     // Create account from private key
     const account = privateKeyToAccount(privateKey as Hex);
 
-    console.log("Executing coin creation for account:", account.address);
     const walletClient = createWalletClient({
       account,
       chain: base,
       transport: http(RPC_URL),
     });
 
-    console.log("Calling Zora SDK createCoin with params:", coinParams);
     const contractCallParams = await createCoin(
       coinParams ,
       walletClient,
       publicClient
     );
-
-    console.log("Zora SDK call successful:", contractCallParams);
 
     return {
       contractCallParams,
@@ -174,7 +170,6 @@ export const coinRouter = router({
   createCoinFromNews: publicProcedure
     .input(createCoinFromNewsSchema) // Use the updated news schema
     .mutation(async ({ input }) => {
-      console.log("Initiating createCoinFromNews with input:", input);
 
       // Determine the final payout recipient
       let finalPayoutRecipient: Address;
@@ -190,17 +185,11 @@ export const coinRouter = router({
       if (input.payoutRecipient) {
         // If client provided an address, use it
         finalPayoutRecipient = input.payoutRecipient as Address;
-        console.log(
-          "Using client-provided payout recipient:",
-          finalPayoutRecipient
-        );
+        
       } else {
         // Otherwise, default to the server's address
         finalPayoutRecipient = serverAccount.address;
-        console.log(
-          "Defaulting payout recipient to server address:",
-          finalPayoutRecipient
-        );
+        
       }
 
       // 1. Fetch News Article
@@ -225,15 +214,11 @@ export const coinRouter = router({
         generatedName = metadataResult.name;
         generatedDescription = metadataResult.description;
         generatedSymbol = metadataResult.symbol;
-        console.log("Generated metadata:", {
-          generatedName,
-          generatedDescription,
-          generatedSymbol,
-        });
+        console.log("Generated metadata");
 
         console.log("Generating image from OpenAI...");
         generatedImageUrl = await generateImageFromHeadline(article.headline);
-        console.log("Generated image URL:", generatedImageUrl);
+        console.log("Generated image URL");
       } catch (error) {
         console.error("Error calling OpenAI service:", error);
         throw new TRPCError({
@@ -253,8 +238,6 @@ export const coinRouter = router({
         payoutRecipient: finalPayoutRecipient, // Use the determined recipient
         initialPurchaseWei: input.initialPurchaseWei, // Pass through
       };
-
-      console.log("Prepared input for executeCoinCreation:", creationInput);
 
       // 4. Call the reusable coin creation logic
       return await executeCoinCreation(creationInput);
