@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import {
   createCoin,
+  CreateCoinArgs,
   getCoin,
   getCoinComments,
   getProfile,
@@ -132,7 +133,7 @@ export async function executeCoinCreation(
 
     console.log("Calling Zora SDK createCoin with params:", coinParams);
     const contractCallParams = await createCoin(
-      coinParams,
+      coinParams as CreateCoinArgs,
       walletClient,
       publicClient
     );
