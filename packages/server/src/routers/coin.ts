@@ -95,15 +95,13 @@ export async function executeCoinCreation(
     );
 
     // Create coin call params using the generated URI
-    const coinParams = {
+    const coinParams: CreateCoinArgs = {
       name: input.name,
       symbol: input.symbol,
       uri: metadataUri,
       payoutRecipient: input.payoutRecipient as Address,
-      platformReferrer: input.payoutRecipient,
-      initialPurchaseWei: input.initialPurchaseWei
-        ? BigInt(input.initialPurchaseWei)
-        : 0n,
+      platformReferrer: input.payoutRecipient as Address,
+      initialPurchaseWei: 0n,
     };
 
     // Set up viem clients
@@ -133,7 +131,7 @@ export async function executeCoinCreation(
 
     console.log("Calling Zora SDK createCoin with params:", coinParams);
     const contractCallParams = await createCoin(
-      coinParams as CreateCoinArgs,
+      coinParams ,
       walletClient,
       publicClient
     );
