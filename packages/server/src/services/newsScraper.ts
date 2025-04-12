@@ -1,12 +1,13 @@
 import axios from "axios";
+import crypto from "crypto";
 import { XMLParser } from "fast-xml-parser";
 
 export interface NewsArticle {
-    id: string;
-    headline: string;
-    summary: string;
-    url: string;
-    timestamp: string;
+  id: string;
+  headline: string;
+  summary: string;
+  url: string;
+  timestamp: string;
 }
 /**
  * RSS Feed configuration

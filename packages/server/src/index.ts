@@ -5,10 +5,10 @@ dotenv.config();
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import cors from "cors";
 import express from "express";
-import { appRouter } from "./routers/_app";
+import { appRouter } from "./routers/_app.js";
 
 // Export type definition of API
-export type { AppRouter } from "./routers/_app";
+export type { AppRouter } from "./routers/_app.js";
 
 // Create express app
 const app = express();
@@ -34,7 +34,6 @@ app.get("/health", (req, res) => {
 // Start server
 const PORT = process.env.PORT || 3069;
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`tRPC API available at http://localhost:${PORT}/trpc`);
-  console.log(`News scraper initialized and scheduled to run every 15 minutes`);
+  console.log(`Server running on port ${PORT}`);
+  console.log(`tRPC API available at ${PORT}/trpc`);
 });

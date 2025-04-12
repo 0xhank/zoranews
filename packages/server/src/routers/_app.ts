@@ -1,7 +1,7 @@
-import { router } from "../trpc";
-import { coinRouter } from "./coin";
-import { newsRouter } from "./news";
-import { workflowRouter } from "./workflow";
+import { router } from "../trpc.js";
+import { coinRouter } from "./coin.js";
+import { newsRouter } from "./news.js";
+import { workflowRouter } from "./workflow.js";
 
 // Main app router combines all subrouters
 export const appRouter = router({

@@ -37,6 +37,7 @@ globs: packages/server/src/services/newsScraper.ts, packages/server/src/test-scr
 - Smart deduplication across multiple sources
 - Groups similar articles to prevent duplicates
 - Implements randomized request delays to avoid rate limiting
+- Utilizes the native Node.js `crypto` module for generating unique IDs for articles
 
 ## Anti-Bot Measures
 - Uses browser-like User-Agent headers to avoid being blocked
