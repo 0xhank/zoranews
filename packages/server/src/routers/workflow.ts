@@ -19,39 +19,12 @@ const ArticleSchema = z.object({
 });
 type Article = z.infer<typeof ArticleSchema>;
 
-// Schema defining the output of the executeCoinCreation function
-const ContractCallParamsSchema = z
-  .object({
-    hash: z
-      .string()
-      .refine((val): val is `0x${string}` => /^0x[a-fA-F0-9]+$/.test(val), {
-        message: "Invalid transaction hash format",
-      }),
-    // Address might be undefined initially
-    address: z
-      .string()
-      .refine((val): val is `0x${string}` => /^0x[a-fA-F0-9]{40}$/.test(val), {
-        message: "Invalid Ethereum address format",
-      })
-      .optional()
-      .nullable(),
-    // Allow other fields returned by the SDK if necessary
-  })
-  .passthrough();
-
-const ExecuteCoinCreationOutputSchema = z.object({
-  contractCallParams: ContractCallParamsSchema,
-  success: z.boolean(),
-  message: z.string(),
-});
-
 export const workflowRouter = router({
   /**
    * Scrapes news, selects an article, and creates a Zora coin based on it.
    * Takes no input parameters.
    */
   createCoinFromScratch: publicProcedure
-    .output(ExecuteCoinCreationOutputSchema) // Output matches executeCoinCreation return type
     .mutation(async ({ ctx }) => {
       const privateKey = process.env.PRIVATE_KEY;
       if (!privateKey) {
@@ -146,7 +119,7 @@ export const workflowRouter = router({
 
       const serverAccount = privateKeyToAccount(privateKey as Hex);
 
-      return await executeCoinCreation({
+      await executeCoinCreation({
         name: generatedName,
         symbol: generatedSymbol,
         description: generatedDescription,

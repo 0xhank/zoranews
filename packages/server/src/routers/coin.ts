@@ -36,7 +36,7 @@ const baseCoinSchema = {
       message: "Invalid Ethereum address format",
     })
     .optional(),
- 
+
   initialPurchaseWei: z.string().optional(),
 };
 
@@ -128,14 +128,15 @@ export async function executeCoinCreation(
       transport: http(RPC_URL),
     });
 
-    const contractCallParams = await createCoin(
-      coinParams ,
+    await createCoin(
+      coinParams,
       walletClient,
       publicClient
     );
 
+    // Convert BigInts in the result to strings
+
     return {
-      contractCallParams,
       success: true,
       message: "Coin creation parameters generated successfully",
     };
@@ -170,7 +171,6 @@ export const coinRouter = router({
   createCoinFromNews: publicProcedure
     .input(createCoinFromNewsSchema) // Use the updated news schema
     .mutation(async ({ input }) => {
-
       // Determine the final payout recipient
       let finalPayoutRecipient: Address;
       const privateKey = process.env.PRIVATE_KEY;
@@ -185,11 +185,9 @@ export const coinRouter = router({
       if (input.payoutRecipient) {
         // If client provided an address, use it
         finalPayoutRecipient = input.payoutRecipient as Address;
-        
       } else {
         // Otherwise, default to the server's address
         finalPayoutRecipient = serverAccount.address;
-        
       }
 
       // 1. Fetch News Article
