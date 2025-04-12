@@ -7,12 +7,10 @@ dotenv.config();
 const apiKey = process.env.OPENAI_API_KEY;
 
 if (!apiKey) {
-  console.warn(
-    "OPENAI_API_KEY environment variable not set. OpenAI features will be disabled."
-  );
+  throw new Error("OPENAI_API_KEY environment variable not set.");
 }
 
-const openai = apiKey ? new OpenAI({ apiKey }) : null;
+const openai = new OpenAI({ apiKey });
 
 /**
  * Generates coin metadata (name, description) based on news article content.
