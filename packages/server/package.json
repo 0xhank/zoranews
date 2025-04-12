@@ -4,6 +4,7 @@
   "private": true,
   "main": "dist/index.js",
   "types": "src/index.ts",
+  "type": "module",
   "scripts": {
     "dev": "tsx src/index.ts",
     "build": "tsc",
