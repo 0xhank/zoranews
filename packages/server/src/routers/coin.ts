@@ -216,7 +216,6 @@ export const coinRouter = router({
           message: `News article with ID ${input.articleId} not found.`,
         });
       }
-      console.log("Found article:", article.headline);
 
       // 2. Generate Coin Data via OpenAI
       let generatedName: string;

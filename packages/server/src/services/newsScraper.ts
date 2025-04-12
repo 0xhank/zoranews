@@ -367,9 +367,7 @@ class NewsScraper {
         articles.push({
           id,
           headline: title,
-          summary:
-            cleanDescription.substring(0, 200) +
-            (cleanDescription.length > 200 ? "..." : ""),
+          summary: cleanDescription,
           url: link,
           timestamp: new Date(pubDate).toISOString(),
         });
