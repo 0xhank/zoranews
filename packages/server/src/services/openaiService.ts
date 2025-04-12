@@ -53,16 +53,6 @@ export async function generateCoinMetadata(
     if (!parsedResult.name || !parsedResult.description) {
       throw new Error("Invalid metadata format received from OpenAI.");
     }
-    if (
-      parsedResult.name.length > 30 ||
-      parsedResult.description.length > 100
-    ) {
-      console.warn(
-        "OpenAI generated metadata exceeding length limits. Truncating."
-      );
-      parsedResult.name = parsedResult.name.substring(0, 30);
-      parsedResult.description = parsedResult.description.substring(0, 100);
-    }
 
     return parsedResult as { name: string; description: string };
   } catch (error) {
