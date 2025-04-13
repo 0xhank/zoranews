@@ -47,7 +47,10 @@ export const workflowRouter = router({
         const { articles } = await newsCaller.scrapeNow();
         console.log("Fetched articles:");
         // Validate the fetched article structure
-        const parsedArticle = ArticleSchema.safeParse(articles[0]);
+        // pick a random article
+        const randomIndex = Math.floor(Math.random() * articles.length);
+        const randomArticle = articles[randomIndex];
+        const parsedArticle = ArticleSchema.safeParse(randomArticle);
         if (!parsedArticle.success) {
           console.error(
             "Fetched article data is invalid or null:",
